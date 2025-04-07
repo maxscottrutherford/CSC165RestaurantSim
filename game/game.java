@@ -7,9 +7,18 @@ import org.joml.*;
 public class game extends VariableFrameRateGame
 {
 	private static Engine engine;
-	private GameObject dol;
-	private ObjShape dolS;
-	private TextureImage doltx;
+	//Gameobjects
+	private GameObject bacon, bellPepper, cashRegister, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,
+	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table, waLL;
+
+	//Gameobject shapes
+	private ObjShape baconS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
+	pizzaS, playerS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, waLLS;
+
+	//Gameobject textures
+	private TextureImage baconTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
+	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, waLLTx;
+
 	private Light light1;
 	private double lastFrameTime, currFrameTime, elapsTime;
 
@@ -22,27 +31,80 @@ public class game extends VariableFrameRateGame
 		game.initializeSystem();
 		game.game_loop();
 	}
-
+	
+	//Load the shapes for the game objects
+	
 	@Override
 	public void loadShapes()
 	{
-		// dolS = new ImportedModel("dolphinHighPoly.obj");
+		baconS = new ImportedModel("bacon.obj");
+		bellPepperS = new ImportedModel("bellPepper.obj");
+		cashRegisterS = new ImportedModel("cashRegister.obj");
+		ceilingS = new ImportedModel("ceiling.obj");
+		chairS = new ImportedModel("chair.obj");
+		counterS = new ImportedModel("counter.obj");
+		customerS = new ImportedModel("customer.obj");
+		cuttingBoardS = new ImportedModel("cuttingBoard.obj");
+		floorS = new ImportedModel("floor.obj");
+		knifeS = new ImportedModel("knife.obj");
+		mushroomS = new ImportedModel("mushroom.obj");
+		pantryShelfS = new ImportedModel("pantryShelf.obj");
+		pepperoniS = new ImportedModel("pepperoni.obj");
+		pizzaS = new ImportedModel("pizza.obj");
+		playerS = new ImportedModel("player.obj");
+		posterS = new ImportedModel("poster.obj");
+		posterWideS = new ImportedModel("posterWide.obj");
+		saucecanS = new ImportedModel("sauceCan.obj");
+		signBoardS = new ImportedModel("signboard.obj");
+		sodaCupS = new ImportedModel("sodaCup.obj");
+		sodaMachineS = new ImportedModel("sodaMachine.obj");
+		tableS = new ImportedModel("table.obj");
+		waLLS = new ImportedModel("wall.obj");
 	}
-
+	
+	//Load the textures for the game objects
+	
 	@Override
 	public void loadTextures()
 	{
-		// doltx = new TextureImage("Dolphin_HighPolyUV.png");
+		baconTx = new TextureImage("bacon.png");
+		bellPepperTx = new TextureImage("bellPepper.png");
+		cashRegisterTx = new TextureImage("cashRegister.png");
+		ceilingTx = new TextureImage("ceiling.png");
+		chairTx = new TextureImage("chair.png");
+		counterTx = new TextureImage("counters.png");
+		customerTx = new TextureImage("customer.png");
+		cuttingBoardTx = new TextureImage("cuttingBoard.png");
+		floorTx = new TextureImage("floor.png");
+		knifeTx = new TextureImage("knife.png");
+		mushroomTx = new TextureImage("mushroom.png");
+		pantryShelfTx = new TextureImage("pantryShelf.png");
+		pepperoniTx = new TextureImage("pepperoni.png");
+		pizzaTx = new TextureImage("peppPizza.png");
+		playerTx = new TextureImage("player.png");
+		posterTx = new TextureImage("poster.png");
+		posterWideTx = new TextureImage("posterWide.png");
+		saucecanTx = new TextureImage("sauceCan.png");
+		signBoardTx = new TextureImage("signboard.png");
+		sodaCupTx = new TextureImage("sodaCup.png");
+		sodaMachineTx = new TextureImage("sodaMachine.png");
+		tablev = new TextureImage("table.png");
+		waLLTx = new TextureImage("wall.png");
 	}
 
 	@Override
 	public void buildObjects()
 	{
-		dol = new GameObject(GameObject.root(), dolS, doltx);
-		Matrix4f translation = new Matrix4f().translation(0, 0, 0);
-		Matrix4f scale = new Matrix4f().scaling(3.0f);
-		dol.setLocalTranslation(translation);
-		dol.setLocalScale(scale);
+		Matrix4f scale = new Matrix4f().scaling(0.1f);
+
+		bacon = new GameObject(GameObject.root(), baconS, baconTx);
+		bacon.setLocalTranslation(new Matrix4f().translation(0, 7, 0));
+		bacon.setLocalScale(scale);
+
+		mushroom = new GameObject(GameObject.root(), mushroomS, mushroomTx);
+		mushroom.setLocalTranslation(new Matrix4f().translation(0, 0, 0));
+		mushroom.setLocalScale(scale);
+
 	}
 
 	@Override
@@ -72,6 +134,6 @@ public class game extends VariableFrameRateGame
 		currFrameTime = System.currentTimeMillis();
 		elapsTime += (currFrameTime - lastFrameTime) / 1000.0;
 
-		dol.setLocalRotation(new Matrix4f().rotation((float) elapsTime, 0, 1, 0));
+		mushroom.setLocalRotation(new Matrix4f().rotation((float) elapsTime, 0, 1, 0));
 	}
 }
