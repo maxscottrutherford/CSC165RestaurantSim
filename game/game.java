@@ -8,20 +8,20 @@ public class game extends VariableFrameRateGame
 {
 	private static Engine engine;
 	//Gameobjects
-	private GameObject bacon, bellPepper, cashRegister, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,
+	private GameObject terrain, bacon, bellPepper, cashRegister, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,
 	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table, waLL;
 
 	//Gameobject shapes
-	private ObjShape baconS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
+	private ObjShape terrainS, baconS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
 	pizzaS, playerS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, waLLS;
 
 	//Gameobject textures
-	private TextureImage baconTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
+	private TextureImage terrainTx, heightMap, baconTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
 	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, waLLTx;
 
 	private Light light1;
 	private double lastFrameTime, currFrameTime, elapsTime;
-
+ 
 	public game() { super(); }
 
 	public static void main(String[] args)
@@ -60,10 +60,11 @@ public class game extends VariableFrameRateGame
 		sodaMachineS = new ImportedModel("sodaMachine.obj");
 		tableS = new ImportedModel("table.obj");
 		waLLS = new ImportedModel("wall.obj");
+		terrainS = new TerrainPlane(100);
 	}
 	
 	//Load the textures for the game objects
-	
+
 	@Override
 	public void loadTextures()
 	{
@@ -90,6 +91,8 @@ public class game extends VariableFrameRateGame
 		sodaMachineTx = new TextureImage("sodaMachine.png");
 		tablev = new TextureImage("table.png");
 		waLLTx = new TextureImage("wall.png");
+		terrainTx = new TextureImage("terrain.jpg");
+		heightMap = new TextureImage("wall.png");
 	}
 
 	@Override
@@ -104,6 +107,14 @@ public class game extends VariableFrameRateGame
 		mushroom = new GameObject(GameObject.root(), mushroomS, mushroomTx);
 		mushroom.setLocalTranslation(new Matrix4f().translation(0, 0, 0));
 		mushroom.setLocalScale(scale);
+
+		terrain = new GameObject(GameObject.root(), terrainS, terrainTx);
+		terrain.setHeightMap(heightMap);
+		Matrix4f initialScale = (new Matrix4f()).scaling(40.0f, 0.0f, 40.0f);
+        terrain.setLocalScale(initialScale);
+		terrain.setLocalTranslation(initialScale);
+        terrain.getRenderStates().setTiling(1);
+        terrain.getRenderStates().setTileFactor(50);
 
 	}
 
@@ -122,9 +133,8 @@ public class game extends VariableFrameRateGame
 		lastFrameTime = System.currentTimeMillis();
 		currFrameTime = System.currentTimeMillis();
 		elapsTime = 0.0;
-
 		engine.getRenderSystem().setWindowDimensions(1900, 1000);
-		engine.getRenderSystem().getViewport("MAIN").getCamera().setLocation(new Vector3f(0, 0, 5));
+		engine.getRenderSystem().getViewport("MAIN").getCamera().setLocation(new Vector3f(0, 1, 10));
 	}
 
 	@Override
