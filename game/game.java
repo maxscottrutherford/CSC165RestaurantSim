@@ -21,6 +21,7 @@ public class game extends VariableFrameRateGame
 
 	private Light light1;
 	private double lastFrameTime, currFrameTime, elapsTime;
+	private int fluffyClouds; // skyboxes
  
 	public game() { super(); }
 
@@ -93,6 +94,14 @@ public class game extends VariableFrameRateGame
 		waLLTx = new TextureImage("wall.png");
 		terrainTx = new TextureImage("terrain.jpg");
 		heightMap = new TextureImage("wall.png");
+	}
+
+	@Override
+	public void loadSkyBoxes()
+	{ 
+		fluffyClouds = (engine.getSceneGraph()).loadCubeMap("fluffyClouds");
+		(engine.getSceneGraph()).setActiveSkyBoxTexture(fluffyClouds);
+		(engine.getSceneGraph()).setSkyBoxEnabled(true);
 	}
 
 	@Override
