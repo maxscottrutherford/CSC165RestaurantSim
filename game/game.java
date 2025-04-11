@@ -1,9 +1,11 @@
 package game;
 
 import tage.*;
+import tage.networking.IGameConnection.ProtocolType;
 import tage.shapes.*;
 
 import java.awt.event.*;
+import java.net.InetAddress;
 
 import org.joml.*;
 
@@ -13,6 +15,39 @@ public class game extends VariableFrameRateGame
 
 	//Camera 
 	private Camera cam;
+
+	//Networking objects and related functions
+	private GhostManager ghostManager;
+	private ProtocolClient protClient;
+	private boolean isClientConnected = false;
+	private String serverAddress = "127.0.0.1";
+	private int serverPort = 6000;
+
+	public GhostManager getGhostManager() {
+		return ghostManager;
+	}
+
+	public void setIsConnected(boolean val) {
+		isClientConnected = val;
+	}
+
+	public GameObject getPlayer() {
+		return player;
+	}
+
+	public ObjShape getGhostShape() {
+		return playerS;
+	}
+
+	public TextureImage getGhostTexture() {
+		return playerTx;
+	}
+
+	public Engine getEngine() {
+		return engine;
+	}
+	
+
 
 	//Gameobjects
 	private GameObject terrain, bacon, bellPepper, cashRegister, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,
@@ -148,9 +183,32 @@ public class game extends VariableFrameRateGame
 		engine.getSceneGraph().addLight(light1);
 	}
 
+	private void setupNetworking() {
+	isClientConnected = false;
+	try {
+		protClient = new ProtocolClient(InetAddress.getByName(serverAddress), serverPort, ProtocolType.UDP, this);
+	} catch (Exception e) { e.printStackTrace(); }
+
+	if (protClient != null) {
+		protClient.sendJoinMessage();
+	} else {
+		System.out.println("Failed to create ProtocolClient");
+	}
+}
+
+	private void processNetworking(double elapsTime) {
+		if (protClient != null) {
+			protClient.processPackets();
+		}
+	}
+
+
+
 	@Override
 	public void initializeGame()
 	{
+		ghostManager = new GhostManager(this);
+		setupNetworking();
 		lastFrameTime = System.currentTimeMillis();
 		currFrameTime = System.currentTimeMillis();
 		elapsTime = 0.0;
@@ -180,6 +238,9 @@ public class game extends VariableFrameRateGame
 		cam.setV(up);
 		cam.setN(fwd);
 		cam.setLocation(loc.add(up.mul(1f)).add(fwd.mul(-2.0f)));
+	
+		//process networking for multiplayer
+		processNetworking(elapsTime);
 	}
 
 	@Override
@@ -187,29 +248,33 @@ public class game extends VariableFrameRateGame
 		Vector3f loc, fwd, right, newLoc;
 		int key = e.getKeyCode();
 		switch (key) {
-			case KeyEvent.VK_W:
+			case KeyEvent.VK_W: //move forward
 				fwd = player.getWorldForwardVector();
 				loc = player.getWorldLocation();
 				newLoc = loc.add(fwd.mul(0.2f));
 				player.setLocalLocation(newLoc);
+				protClient.sendMoveMessage(player.getWorldLocation());
 				break;
-			case KeyEvent.VK_S:
+			case KeyEvent.VK_S: //move backward
 				fwd = player.getWorldForwardVector();
 				loc = player.getWorldLocation();
 				newLoc = loc.add(fwd.mul(-0.2f));
 				player.setLocalLocation(newLoc);
+				protClient.sendMoveMessage(player.getWorldLocation());
 				break;
-			case KeyEvent.VK_A:
+			case KeyEvent.VK_A: //move left
 				right = player.getWorldRightVector();
 				loc = player.getWorldLocation();
 				newLoc = loc.add(right.mul(-0.2f));
 				player.setLocalLocation(newLoc);
+				protClient.sendMoveMessage(player.getWorldLocation());
 				break;
-			case KeyEvent.VK_D:
+			case KeyEvent.VK_D: //move right
 				right = player.getWorldRightVector();
 				loc = player.getWorldLocation();
 				newLoc = loc.add(right.mul(0.2f));
 				player.setLocalLocation(newLoc);
+				protClient.sendMoveMessage(player.getWorldLocation());
 				break;
 		}
 		super.keyPressed(e);
