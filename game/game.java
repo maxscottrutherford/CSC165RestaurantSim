@@ -58,7 +58,7 @@ public class game extends VariableFrameRateGame
 	pizzaS, playerS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, waLLS;
 
 	//Gameobject textures
-	private TextureImage terrainTx, heightMap, baconTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
+	private TextureImage terrainTx, hills, baconTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
 	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, waLLTx;
 
 	private Light light1;
@@ -103,7 +103,7 @@ public class game extends VariableFrameRateGame
 		sodaMachineS = new ImportedModel("sodaMachine.obj");
 		tableS = new ImportedModel("table.obj");
 		waLLS = new ImportedModel("wall.obj");
-		terrainS = new TerrainPlane(100);
+		terrainS = new TerrainPlane(1000);
 	}
 	
 	//Load the textures for the game objects
@@ -135,7 +135,7 @@ public class game extends VariableFrameRateGame
 		tablev = new TextureImage("table.png");
 		waLLTx = new TextureImage("wall.png");
 		terrainTx = new TextureImage("terrain.jpg");
-		heightMap = new TextureImage("wall.png");
+		hills = new TextureImage("hills.png");
 	}
 
 	@Override
@@ -153,7 +153,7 @@ public class game extends VariableFrameRateGame
 		Matrix4f playerScale = new Matrix4f().scaling(0.3f);
 
 		player = new GameObject(GameObject.root(), playerS, playerTx);
-		player.setLocalTranslation(new Matrix4f().translation(0, 1, 0));
+		player.setLocalTranslation(new Matrix4f().translation(0, 0, 0));
 		player.setLocalScale(playerScale);
 
 		bacon = new GameObject(GameObject.root(), baconS, baconTx);
@@ -164,13 +164,18 @@ public class game extends VariableFrameRateGame
 		mushroom.setLocalTranslation(new Matrix4f().translation(5, 1, 6));
 		mushroom.setLocalScale(scale);
 
-		terrain = new GameObject(GameObject.root(), terrainS, terrainTx);
-		terrain.setHeightMap(heightMap);
-		Matrix4f initialScale = (new Matrix4f()).scaling(40.0f, 0.0f, 40.0f);
-        terrain.setLocalScale(initialScale);
-		terrain.setLocalTranslation(initialScale);
-        terrain.getRenderStates().setTiling(1);
-        terrain.getRenderStates().setTileFactor(50);
+		// build terrain object
+		terrain = new GameObject(GameObject.root(), terrainS);
+		terrain.setLocalTranslation(new Matrix4f().translation(0f,0f,0f));
+		Matrix4f initialScale = (new Matrix4f()).scaling(100.0f, 1.0f, 100.0f);
+		terrain.setLocalScale(initialScale);
+		terrain.setIsTerrain(true);
+		terrain.setHeightMap(hills);
+		terrain.setTextureImage(terrainTx);
+	
+		// set tiling for terrain texture
+		terrain.getRenderStates().setTiling(1);
+		terrain.getRenderStates().setTileFactor(100);
 
 	}
 
@@ -227,7 +232,9 @@ public class game extends VariableFrameRateGame
 		elapsTime += (currFrameTime - lastFrameTime) / 1000.0;
 
 		mushroom.setLocalRotation(new Matrix4f().rotation((float) elapsTime, 0, 1, 0));
-		
+		loc = player.getWorldLocation();
+		float height = terrain.getHeight(loc.x(), loc.z());
+		player.setLocalLocation(new Vector3f(loc.x(), height, loc.z()));
 		//updating camera to follow the player
 		cam = (engine.getRenderSystem()).getViewport("MAIN").getCamera();
 		loc = player.getWorldLocation();
