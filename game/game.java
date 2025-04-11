@@ -2,11 +2,18 @@ package game;
 
 import tage.*;
 import tage.shapes.*;
+
+import java.awt.event.*;
+
 import org.joml.*;
 
 public class game extends VariableFrameRateGame
 {
 	private static Engine engine;
+
+	//Camera 
+	private Camera cam;
+
 	//Gameobjects
 	private GameObject terrain, bacon, bellPepper, cashRegister, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,
 	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table, waLL;
@@ -108,13 +115,18 @@ public class game extends VariableFrameRateGame
 	public void buildObjects()
 	{
 		Matrix4f scale = new Matrix4f().scaling(0.1f);
+		Matrix4f playerScale = new Matrix4f().scaling(0.3f);
+
+		player = new GameObject(GameObject.root(), playerS, playerTx);
+		player.setLocalTranslation(new Matrix4f().translation(0, 1, 0));
+		player.setLocalScale(playerScale);
 
 		bacon = new GameObject(GameObject.root(), baconS, baconTx);
-		bacon.setLocalTranslation(new Matrix4f().translation(0, 7, 0));
+		bacon.setLocalTranslation(new Matrix4f().translation(2, 1, 4));
 		bacon.setLocalScale(scale);
 
 		mushroom = new GameObject(GameObject.root(), mushroomS, mushroomTx);
-		mushroom.setLocalTranslation(new Matrix4f().translation(0, 0, 0));
+		mushroom.setLocalTranslation(new Matrix4f().translation(5, 1, 6));
 		mushroom.setLocalScale(scale);
 
 		terrain = new GameObject(GameObject.root(), terrainS, terrainTx);
@@ -149,10 +161,57 @@ public class game extends VariableFrameRateGame
 	@Override
 	public void update()
 	{
+		//variables for following player
+		Vector3f loc, fwd, up, right;
+
 		lastFrameTime = currFrameTime;
 		currFrameTime = System.currentTimeMillis();
 		elapsTime += (currFrameTime - lastFrameTime) / 1000.0;
 
 		mushroom.setLocalRotation(new Matrix4f().rotation((float) elapsTime, 0, 1, 0));
+		
+		//updating camera to follow the player
+		cam = (engine.getRenderSystem()).getViewport("MAIN").getCamera();
+		loc = player.getWorldLocation();
+		fwd = player.getWorldForwardVector();
+		up = player.getWorldUpVector();
+		right = player.getWorldRightVector();
+		cam.setU(right);
+		cam.setV(up);
+		cam.setN(fwd);
+		cam.setLocation(loc.add(up.mul(1f)).add(fwd.mul(-2.0f)));
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		Vector3f loc, fwd, right, newLoc;
+		int key = e.getKeyCode();
+		switch (key) {
+			case KeyEvent.VK_W:
+				fwd = player.getWorldForwardVector();
+				loc = player.getWorldLocation();
+				newLoc = loc.add(fwd.mul(0.2f));
+				player.setLocalLocation(newLoc);
+				break;
+			case KeyEvent.VK_S:
+				fwd = player.getWorldForwardVector();
+				loc = player.getWorldLocation();
+				newLoc = loc.add(fwd.mul(-0.2f));
+				player.setLocalLocation(newLoc);
+				break;
+			case KeyEvent.VK_A:
+				right = player.getWorldRightVector();
+				loc = player.getWorldLocation();
+				newLoc = loc.add(right.mul(-0.2f));
+				player.setLocalLocation(newLoc);
+				break;
+			case KeyEvent.VK_D:
+				right = player.getWorldRightVector();
+				loc = player.getWorldLocation();
+				newLoc = loc.add(right.mul(0.2f));
+				player.setLocalLocation(newLoc);
+				break;
+		}
+		super.keyPressed(e);
 	}
 }
