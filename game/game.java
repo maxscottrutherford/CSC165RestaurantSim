@@ -1,6 +1,11 @@
 package game;
 
 import tage.*;
+import tage.audio.AudioResource;
+import tage.audio.AudioResourceType;
+import tage.audio.IAudioManager;
+import tage.audio.Sound;
+import tage.audio.SoundType;
 import tage.networking.IGameConnection.ProtocolType;
 import tage.shapes.*;
 
@@ -23,7 +28,9 @@ public class game extends VariableFrameRateGame
 	private boolean isClientConnected = false;
 	private String serverAddress = "127.0.0.1";
 	private int serverPort = 6000;
-
+	private boolean upPressed, downPressed, leftPressed, rightPressed;
+	private float   stepTimer      = 0f;
+	private final float STEP_INTERVAL = 0.5f;  // seconds between steps
 	public GhostManager getGhostManager() {
 		return ghostManager;
 	}
@@ -65,6 +72,12 @@ public class game extends VariableFrameRateGame
 	private Light light1;
 	private double lastFrameTime, currFrameTime, elapsTime;
 	private int fluffyClouds; // skyboxes
+	private Sound insideSound, outsideSound, footstepSound;
+	private IAudioManager audioMgr;
+	private float restaurantRadius = 20f;
+	// track which ambience is currently active:
+    private enum Ambience { NONE, INSIDE, OUTSIDE }
+    private Ambience currentAmbience = Ambience.NONE;
  
 	public game() { super(); }
 
@@ -210,6 +223,47 @@ public class game extends VariableFrameRateGame
 		}
 	}
 
+	
+
+	@Override
+	public void loadSounds() {
+		audioMgr = engine.getAudioManager();
+
+		// inside ambience
+		AudioResource inRes = audioMgr.createAudioResource(
+			"b.wav", AudioResourceType.AUDIO_SAMPLE);
+		insideSound = new Sound(inRes, SoundType.SOUND_MUSIC, 60, true);
+		insideSound.initialize(audioMgr);
+
+	
+		// outside ambience
+		AudioResource outRes = audioMgr.createAudioResource(
+			"a.wav", AudioResourceType.AUDIO_SAMPLE);
+		outsideSound = new Sound(outRes, SoundType.SOUND_MUSIC, 30, true);
+		outsideSound.initialize(audioMgr);
+
+		AudioResource stepRes = audioMgr.createAudioResource(
+			"footsteps.wav", AudioResourceType.AUDIO_SAMPLE);
+		footstepSound = new Sound(stepRes, SoundType.SOUND_EFFECT, 80, true);
+		footstepSound.initialize(audioMgr);
+		footstepSound.setMinDistance(1f);
+		footstepSound.setMaxDistance(10f);
+		footstepSound.setRollOff(1f);
+
+	
+	}
+
+	private void setEarParameters() {
+		Camera cam = engine.getRenderSystem()
+		.getViewport("MAIN")
+		.getCamera();
+
+		audioMgr.getEar().setLocation(cam.getLocation());
+
+
+		audioMgr.getEar().setOrientation(
+		cam.getN(), new Vector3f(0f, 1f, 0f));
+	}
 
 
 	@Override
@@ -222,11 +276,37 @@ public class game extends VariableFrameRateGame
 		elapsTime = 0.0;
 		engine.getRenderSystem().setWindowDimensions(1900, 1000);
 		engine.getRenderSystem().getViewport("MAIN").getCamera().setLocation(new Vector3f(1, 3, 5));
+		outsideSound.stop();
+		outsideSound.play();
+        currentAmbience = Ambience.OUTSIDE;
+		
 	}
+
+	private void updateAmbience() {
+        Vector3f p = player.getWorldLocation();
+        boolean inside = p.distance(new Vector3f(0f,0f,0f))
+                          < restaurantRadius;
+
+						  if (inside && currentAmbience != Ambience.INSIDE) {
+							// entering
+							outsideSound.stop();       
+							insideSound.stop();        
+							insideSound.play();        
+							currentAmbience = Ambience.INSIDE;
+						}
+						else if (!inside && currentAmbience != Ambience.OUTSIDE) {
+							// exiting
+							insideSound.stop();
+							outsideSound.stop();
+							outsideSound.play();
+							currentAmbience = Ambience.OUTSIDE;
+						}
+    }
 
 	@Override
 	public void update()
 	{
+		
 		//variables for following player
 		Vector3f loc, fwd, up, right;
 
@@ -246,9 +326,24 @@ public class game extends VariableFrameRateGame
 		cam.setV(up);
 		cam.setN(fwd);
 		cam.setLocation(loc.add(up.mul(1f)).add(fwd.mul(-2.0f)));
-	
+		footstepSound.setLocation(player.getWorldLocation());
 		//process networking for multiplayer
 		processNetworking(elapsTime);
+		boolean moving = upPressed || downPressed || leftPressed || rightPressed;
+		if (moving) {
+			if (!footstepSound.getIsPlaying()) {
+				// reposition to player so attenuation works
+				footstepSound.setLocation(player.getWorldLocation());
+				footstepSound.play();
+			}
+		}
+		else {
+			if (footstepSound.getIsPlaying()) {
+				footstepSound.stop();
+			}
+		}
+		updateAmbience();
+        setEarParameters();
 	}
 
 	@Override
@@ -262,6 +357,7 @@ public class game extends VariableFrameRateGame
 				newLoc = loc.add(fwd.mul(0.2f));
 				player.setLocalLocation(newLoc);
 				protClient.sendMoveMessage(player.getWorldLocation());
+				upPressed    = true;
 				break;
 			case KeyEvent.VK_S: //move backward
 				fwd = player.getWorldForwardVector();
@@ -269,6 +365,7 @@ public class game extends VariableFrameRateGame
 				newLoc = loc.add(fwd.mul(-0.2f));
 				player.setLocalLocation(newLoc);
 				protClient.sendMoveMessage(player.getWorldLocation());
+				downPressed  = true;
 				break;
 			case KeyEvent.VK_A: //move left
 				right = player.getWorldRightVector();
@@ -276,6 +373,7 @@ public class game extends VariableFrameRateGame
 				newLoc = loc.add(right.mul(-0.2f));
 				player.setLocalLocation(newLoc);
 				protClient.sendMoveMessage(player.getWorldLocation());
+				leftPressed  = true;
 				break;
 			case KeyEvent.VK_D: //move right
 				right = player.getWorldRightVector();
@@ -283,8 +381,21 @@ public class game extends VariableFrameRateGame
 				newLoc = loc.add(right.mul(0.2f));
 				player.setLocalLocation(newLoc);
 				protClient.sendMoveMessage(player.getWorldLocation());
+				rightPressed = true;
 				break;
+
+				
 		}
 		super.keyPressed(e);
 	}
+	@Override
+	public void keyReleased(KeyEvent e) {
+		switch(e.getKeyCode()) {
+			case KeyEvent.VK_W: upPressed    = false; break;
+			case KeyEvent.VK_S: downPressed  = false; break;
+			case KeyEvent.VK_A: leftPressed  = false; break;
+			case KeyEvent.VK_D: rightPressed = false; break;
+		}
+		super.keyReleased(e);
+}
 }
