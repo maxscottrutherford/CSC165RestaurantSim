@@ -8,6 +8,7 @@ import java.awt.event.*;
 import java.net.InetAddress;
 
 import org.joml.*;
+import org.joml.Math;
 
 public class game extends VariableFrameRateGame
 {
@@ -50,15 +51,15 @@ public class game extends VariableFrameRateGame
 
 
 	//Gameobjects
-	private GameObject terrain, bacon, bellPepper, cashRegister, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,
+	private GameObject terrain, restaurant, bacon, bellPepper, cashRegister, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,
 	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table, waLL;
 
 	//Gameobject shapes
-	private ObjShape terrainS, baconS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
+	private ObjShape terrainS, baconS, restaurantS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
 	pizzaS, playerS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, waLLS;
 
 	//Gameobject textures
-	private TextureImage terrainTx, hills, baconTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
+	private TextureImage terrainTx, hills, baconTx, restaurantTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
 	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, waLLTx;
 
 	private Light light1;
@@ -81,6 +82,7 @@ public class game extends VariableFrameRateGame
 	public void loadShapes()
 	{
 		baconS = new ImportedModel("bacon.obj");
+		restaurantS = new ImportedModel("restaurant.obj");
 		bellPepperS = new ImportedModel("bellPepper.obj");
 		cashRegisterS = new ImportedModel("cashRegister.obj");
 		ceilingS = new ImportedModel("ceiling.obj");
@@ -136,6 +138,8 @@ public class game extends VariableFrameRateGame
 		waLLTx = new TextureImage("wall.png");
 		terrainTx = new TextureImage("terrain.jpg");
 		hills = new TextureImage("hills.png");
+		restaurantTx = new TextureImage("Sam - Texture.png");
+		//load the textures for the game objects
 	}
 
 	@Override
@@ -149,20 +153,20 @@ public class game extends VariableFrameRateGame
 	@Override
 	public void buildObjects()
 	{
-		Matrix4f scale = new Matrix4f().scaling(0.1f);
+		Matrix4f scale = new Matrix4f().scaling(1f);
 		Matrix4f playerScale = new Matrix4f().scaling(0.3f);
 
 		player = new GameObject(GameObject.root(), playerS, playerTx);
-		player.setLocalTranslation(new Matrix4f().translation(0, 0, 0));
+		player.setLocalTranslation(new Matrix4f().translation(-50, 2, 10));
+		player.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(70)));
 		player.setLocalScale(playerScale);
 
-		bacon = new GameObject(GameObject.root(), baconS, baconTx);
-		bacon.setLocalTranslation(new Matrix4f().translation(2, 1, 4));
-		bacon.setLocalScale(scale);
+		restaurant = new GameObject(GameObject.root(), restaurantS, restaurantTx);
+		restaurant.setLocalTranslation(new Matrix4f().translation(0, 0, 0));
+		restaurant.setLocalRotation(new Matrix4f().rotationX((float) Math.toRadians(-180)));
+		restaurant.setLocalScale(scale);
 
-		mushroom = new GameObject(GameObject.root(), mushroomS, mushroomTx);
-		mushroom.setLocalTranslation(new Matrix4f().translation(5, 1, 6));
-		mushroom.setLocalScale(scale);
+		
 
 		// build terrain object
 		terrain = new GameObject(GameObject.root(), terrainS);
@@ -170,7 +174,6 @@ public class game extends VariableFrameRateGame
 		Matrix4f initialScale = (new Matrix4f()).scaling(100.0f, 1.0f, 100.0f);
 		terrain.setLocalScale(initialScale);
 		terrain.setIsTerrain(true);
-		terrain.setHeightMap(hills);
 		terrain.setTextureImage(terrainTx);
 	
 		// set tiling for terrain texture
@@ -218,7 +221,7 @@ public class game extends VariableFrameRateGame
 		currFrameTime = System.currentTimeMillis();
 		elapsTime = 0.0;
 		engine.getRenderSystem().setWindowDimensions(1900, 1000);
-		engine.getRenderSystem().getViewport("MAIN").getCamera().setLocation(new Vector3f(0, 1, 10));
+		engine.getRenderSystem().getViewport("MAIN").getCamera().setLocation(new Vector3f(1, 3, 5));
 	}
 
 	@Override
@@ -230,8 +233,6 @@ public class game extends VariableFrameRateGame
 		lastFrameTime = currFrameTime;
 		currFrameTime = System.currentTimeMillis();
 		elapsTime += (currFrameTime - lastFrameTime) / 1000.0;
-
-		mushroom.setLocalRotation(new Matrix4f().rotation((float) elapsTime, 0, 1, 0));
 		loc = player.getWorldLocation();
 		float height = terrain.getHeight(loc.x(), loc.z());
 		player.setLocalLocation(new Vector3f(loc.x(), height, loc.z()));
