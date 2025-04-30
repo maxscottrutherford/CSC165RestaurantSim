@@ -7,6 +7,8 @@ import tage.audio.IAudioManager;
 import tage.audio.Sound;
 import tage.audio.SoundType;
 import tage.networking.IGameConnection.ProtocolType;
+import tage.physics.PhysicsEngine;
+import tage.physics.JBullet.JBulletPhysicsEngine;
 import tage.shapes.*;
 
 import java.awt.event.*;
@@ -18,6 +20,9 @@ import org.joml.Math;
 public class game extends VariableFrameRateGame
 {
 	private static Engine engine;
+
+	//Physics Engine
+	private PhysicsEngine physicsEngine;
 
 	//Camera 
 	private Camera cam;
@@ -167,11 +172,11 @@ public class game extends VariableFrameRateGame
 	public void buildObjects()
 	{
 		Matrix4f scale = new Matrix4f().scaling(1f);
-		Matrix4f playerScale = new Matrix4f().scaling(0.3f);
+		Matrix4f playerScale = new Matrix4f().scaling(1.8f);
 
 		player = new GameObject(GameObject.root(), playerS, playerTx);
 		player.setLocalTranslation(new Matrix4f().translation(-50, 2, 10));
-		player.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(70)));
+		player.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 		player.setLocalScale(playerScale);
 
 		restaurant = new GameObject(GameObject.root(), restaurantS, restaurantTx);
@@ -270,6 +275,9 @@ public class game extends VariableFrameRateGame
 	public void initializeGame()
 	{
 		ghostManager = new GhostManager(this);
+		physicsEngine = new JBulletPhysicsEngine();
+		physicsEngine.initSystem();
+		physicsEngine.setGravity(new float[]{0f, -9.8f, 0f});
 		setupNetworking();
 		lastFrameTime = System.currentTimeMillis();
 		currFrameTime = System.currentTimeMillis();
@@ -325,7 +333,7 @@ public class game extends VariableFrameRateGame
 		cam.setU(right);
 		cam.setV(up);
 		cam.setN(fwd);
-		cam.setLocation(loc.add(up.mul(1f)).add(fwd.mul(-2.0f)));
+		cam.setLocation(loc.add(up.mul(6f)).add(fwd.mul(-10.0f)));
 		footstepSound.setLocation(player.getWorldLocation());
 		//process networking for multiplayer
 		processNetworking(elapsTime);
@@ -354,7 +362,7 @@ public class game extends VariableFrameRateGame
 			case KeyEvent.VK_W: //move forward
 				fwd = player.getWorldForwardVector();
 				loc = player.getWorldLocation();
-				newLoc = loc.add(fwd.mul(0.2f));
+				newLoc = loc.add(fwd.mul(1.5f));
 				player.setLocalLocation(newLoc);
 				protClient.sendMoveMessage(player.getWorldLocation());
 				upPressed    = true;
@@ -362,7 +370,7 @@ public class game extends VariableFrameRateGame
 			case KeyEvent.VK_S: //move backward
 				fwd = player.getWorldForwardVector();
 				loc = player.getWorldLocation();
-				newLoc = loc.add(fwd.mul(-0.2f));
+				newLoc = loc.add(fwd.mul(-1.5f));
 				player.setLocalLocation(newLoc);
 				protClient.sendMoveMessage(player.getWorldLocation());
 				downPressed  = true;
@@ -370,7 +378,7 @@ public class game extends VariableFrameRateGame
 			case KeyEvent.VK_A: //move left
 				right = player.getWorldRightVector();
 				loc = player.getWorldLocation();
-				newLoc = loc.add(right.mul(-0.2f));
+				newLoc = loc.add(right.mul(-1.5f));
 				player.setLocalLocation(newLoc);
 				protClient.sendMoveMessage(player.getWorldLocation());
 				leftPressed  = true;
@@ -378,16 +386,23 @@ public class game extends VariableFrameRateGame
 			case KeyEvent.VK_D: //move right
 				right = player.getWorldRightVector();
 				loc = player.getWorldLocation();
-				newLoc = loc.add(right.mul(0.2f));
+				newLoc = loc.add(right.mul(1.5f));
 				player.setLocalLocation(newLoc);
 				protClient.sendMoveMessage(player.getWorldLocation());
 				rightPressed = true;
 				break;
-
-				
+			case KeyEvent.VK_Q: 
+				Matrix4f rotL = new Matrix4f().rotateY((float) Math.toRadians(5));
+				player.setLocalRotation(rotL.mul(player.getLocalRotation()));
+				break;
+			case KeyEvent.VK_E: 
+				Matrix4f rotR = new Matrix4f().rotateY((float) Math.toRadians(-5));
+				player.setLocalRotation(rotR.mul(player.getLocalRotation()));
+				break;
 		}
 		super.keyPressed(e);
 	}
+
 	@Override
 	public void keyReleased(KeyEvent e) {
 		switch(e.getKeyCode()) {
@@ -397,5 +412,5 @@ public class game extends VariableFrameRateGame
 			case KeyEvent.VK_D: rightPressed = false; break;
 		}
 		super.keyReleased(e);
-}
+	}
 }
