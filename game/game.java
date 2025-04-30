@@ -231,14 +231,14 @@ public class game extends VariableFrameRateGame
 
 		// inside ambience
 		AudioResource inRes = audioMgr.createAudioResource(
-			"b.wav", AudioResourceType.AUDIO_SAMPLE);
+			"b.wav", AudioResourceType.AUDIO_STREAM);
 		insideSound = new Sound(inRes, SoundType.SOUND_MUSIC, 60, true);
 		insideSound.initialize(audioMgr);
 
 	
 		// outside ambience
 		AudioResource outRes = audioMgr.createAudioResource(
-			"a.wav", AudioResourceType.AUDIO_SAMPLE);
+			"a.wav", AudioResourceType.AUDIO_STREAM);
 		outsideSound = new Sound(outRes, SoundType.SOUND_MUSIC, 30, true);
 		outsideSound.initialize(audioMgr);
 
