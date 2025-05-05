@@ -8,6 +8,7 @@ import tage.audio.Sound;
 import tage.audio.SoundType;
 import tage.networking.IGameConnection.ProtocolType;
 import tage.physics.PhysicsEngine;
+import tage.physics.PhysicsObject;
 import tage.physics.JBullet.JBulletPhysicsEngine;
 import tage.shapes.*;
 
@@ -83,6 +84,9 @@ public class game extends VariableFrameRateGame
 	// track which ambience is currently active:
     private enum Ambience { NONE, INSIDE, OUTSIDE }
     private Ambience currentAmbience = Ambience.NONE;
+	private PhysicsObject playerPhys;
+	private float moveForce = 2f;
+	
  
 	public game() { super(); }
 
@@ -269,15 +273,58 @@ public class game extends VariableFrameRateGame
 		audioMgr.getEar().setOrientation(
 		cam.getN(), new Vector3f(0f, 1f, 0f));
 	}
+	private float[] tmpMat = new float[16];
 
 
+
+	private float[] toFloat(double[] d) {
+		float[] f = new float[d.length];
+		for (int i = 0; i < d.length; i++) f[i] = (float) d[i];
+		return f;
+	}
+	private double[] toDouble(float[] f) {
+		double[] d = new double[f.length];
+		for (int i = 0; i < f.length; i++) d[i] = (double) f[i];
+		return d;
+	}
 	@Override
 	public void initializeGame()
-	{
+	{	
+
+		engine.enablePhysicsWorldRender();
+			
+		physicsEngine = engine.getSceneGraph().getPhysicsEngine();
+		physicsEngine.setGravity(new float[]{0f, -5f, 0f});
+
+		engine.enableGraphicsWorldRender();
+		engine.enablePhysicsWorldRender();
+
+		// Create physics walls (invisible)
+		float radius = 20f, h = 5f, t = 0.5f, L = radius * 2, m0 = 0f;
+		Matrix4f m = new Matrix4f();
+		float[] tmp = new float[16];
+
+		float mass = 1.0f;
+		float up[ ] = {0,1,0};
+		radius = 0.75f;
+		float height = 2.0f;
+		double[ ] tempTransform;
+
+		m.translation(0, h/2, -radius); m.get(tmp);
+		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{L,h,t});
+		m.translation(0, h/2, radius);  m.get(tmp);
+		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{L,h,t});
+		m.translation(-radius, h/2, 0); m.get(tmp);
+		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{t,h,L});
+		m.translation(radius, h/2, 0);  m.get(tmp);
+		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{t,h,L});
+
+		// Create player physics body
+		player.getLocalTranslation().get(tmp);
+		playerPhys = engine.getSceneGraph().addPhysicsCylinder(1f, toDouble(tmp), 0.5f, 2f);
+		playerPhys.setFriction(1f);
+		player.setPhysicsObject(playerPhys);
 		ghostManager = new GhostManager(this);
-		physicsEngine = new JBulletPhysicsEngine();
-		physicsEngine.initSystem();
-		physicsEngine.setGravity(new float[]{0f, -9.8f, 0f});
 		setupNetworking();
 		lastFrameTime = System.currentTimeMillis();
 		currFrameTime = System.currentTimeMillis();
@@ -311,20 +358,28 @@ public class game extends VariableFrameRateGame
 						}
     }
 
-	@Override
-	public void update()
-	{
-		
-		//variables for following player
-		Vector3f loc, fwd, up, right;
+	private float[] toFloatArray(double[] arr)
+		{ if (arr == null) return null;
+		int n = arr.length;
+		float[] ret = new float[n];
+		for (int i = 0; i < n; i++)
+		{ ret[i] = (float)arr[i];
+		}
+		return ret;
+		}
 
+		@Override
+	public void update() {
+		Vector3f loc, fwd, up, right;
+		
 		lastFrameTime = currFrameTime;
 		currFrameTime = System.currentTimeMillis();
 		elapsTime += (currFrameTime - lastFrameTime) / 1000.0;
+
 		loc = player.getWorldLocation();
 		float height = terrain.getHeight(loc.x(), loc.z());
 		player.setLocalLocation(new Vector3f(loc.x(), height, loc.z()));
-		//updating camera to follow the player
+
 		cam = (engine.getRenderSystem()).getViewport("MAIN").getCamera();
 		loc = player.getWorldLocation();
 		fwd = player.getWorldForwardVector();
@@ -333,74 +388,84 @@ public class game extends VariableFrameRateGame
 		cam.setU(right);
 		cam.setV(up);
 		cam.setN(fwd);
-		cam.setLocation(loc.add(up.mul(6f)).add(fwd.mul(-10.0f)));
-		footstepSound.setLocation(player.getWorldLocation());
-		//process networking for multiplayer
-		processNetworking(elapsTime);
-		boolean moving = upPressed || downPressed || leftPressed || rightPressed;
-		if (moving) {
-			if (!footstepSound.getIsPlaying()) {
-				// reposition to player so attenuation works
-				footstepSound.setLocation(player.getWorldLocation());
-				footstepSound.play();
-			}
+	cam.setLocation(loc.add(up.mul(6f)).add(fwd.mul(-10.0f)));
+	Matrix4f mat = new Matrix4f();
+
+	footstepSound.setLocation(player.getWorldLocation());
+
+	processNetworking(elapsTime);
+
+	boolean moving = upPressed || downPressed || leftPressed || rightPressed;
+	if (moving) {
+		if (!footstepSound.getIsPlaying()) {
+			footstepSound.setLocation(player.getWorldLocation());
+			footstepSound.play();
 		}
-		else {
-			if (footstepSound.getIsPlaying()) {
-				footstepSound.stop();
-			}
+	} else {
+		if (footstepSound.getIsPlaying()) {
+			footstepSound.stop();
 		}
-		updateAmbience();
-        setEarParameters();
+	}
+
+	updateAmbience();
+	setEarParameters();
+
+	float fx = 0f, fy = 0f, fz = 0f;
+
+	 fwd = player.getWorldForwardVector();
+	 right = player.getWorldRightVector();
+
+	if (upPressed) {
+		fx += fwd.x() ;
+		fz += fwd.z() ;
+	}
+	if (downPressed) {
+		fx -= fwd.x() ;
+		fz -= fwd.z() ;
+	}
+	if (leftPressed) {
+		fx -= right.x() ;
+		fz -= right.z() ;
+	}
+	if (rightPressed) {
+		fx += right.x() ;
+		fz += right.z() ;
+	}
+
+	if (fx != 0 || fz != 0) {
+		playerPhys.applyForce(fx*50, fy, fz*50, 0f, 0f, 0f);
+	}
+	physicsEngine.update((float)elapsTime);
+	double[] tf = playerPhys.getTransform();
+	player.setLocalTranslation(new Matrix4f().translation((float) tf[12], (float) tf[13], (float) tf[14]));
+	for (GameObject go:engine.getSceneGraph().getGameObjects())
+	{ if (go.getPhysicsObject() != null)
+	{ // set translation
+		mat.set(toFloatArray(go.getPhysicsObject().getTransform()));
+	}
+}
 	}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		Vector3f loc, fwd, right, newLoc;
-		int key = e.getKeyCode();
-		switch (key) {
-			case KeyEvent.VK_W: //move forward
-				fwd = player.getWorldForwardVector();
-				loc = player.getWorldLocation();
-				newLoc = loc.add(fwd.mul(1.5f));
-				player.setLocalLocation(newLoc);
-				protClient.sendMoveMessage(player.getWorldLocation());
-				upPressed    = true;
+		switch(e.getKeyCode()) {
+			case KeyEvent.VK_W: upPressed    = true;  break;
+			case KeyEvent.VK_S: downPressed  = true;  break;
+			case KeyEvent.VK_A: leftPressed  = true;  break;
+			case KeyEvent.VK_D: rightPressed = true;  break;
+			case KeyEvent.VK_Q:
+				player.setLocalRotation(
+					new Matrix4f().rotateY((float)Math.toRadians(5))
+						.mul(player.getLocalRotation())
+				);
 				break;
-			case KeyEvent.VK_S: //move backward
-				fwd = player.getWorldForwardVector();
-				loc = player.getWorldLocation();
-				newLoc = loc.add(fwd.mul(-1.5f));
-				player.setLocalLocation(newLoc);
-				protClient.sendMoveMessage(player.getWorldLocation());
-				downPressed  = true;
-				break;
-			case KeyEvent.VK_A: //move left
-				right = player.getWorldRightVector();
-				loc = player.getWorldLocation();
-				newLoc = loc.add(right.mul(-1.5f));
-				player.setLocalLocation(newLoc);
-				protClient.sendMoveMessage(player.getWorldLocation());
-				leftPressed  = true;
-				break;
-			case KeyEvent.VK_D: //move right
-				right = player.getWorldRightVector();
-				loc = player.getWorldLocation();
-				newLoc = loc.add(right.mul(1.5f));
-				player.setLocalLocation(newLoc);
-				protClient.sendMoveMessage(player.getWorldLocation());
-				rightPressed = true;
-				break;
-			case KeyEvent.VK_Q: 
-				Matrix4f rotL = new Matrix4f().rotateY((float) Math.toRadians(5));
-				player.setLocalRotation(rotL.mul(player.getLocalRotation()));
-				break;
-			case KeyEvent.VK_E: 
-				Matrix4f rotR = new Matrix4f().rotateY((float) Math.toRadians(-5));
-				player.setLocalRotation(rotR.mul(player.getLocalRotation()));
+			case KeyEvent.VK_E:
+				player.setLocalRotation(
+					new Matrix4f().rotateY((float)Math.toRadians(-5))
+						.mul(player.getLocalRotation())
+				);
 				break;
 		}
-		super.keyPressed(e);
 	}
 
 	@Override
