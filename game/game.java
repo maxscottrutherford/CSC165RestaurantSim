@@ -308,39 +308,15 @@ public class game extends VariableFrameRateGame implements MouseMotionListener
 		physicsEngine = engine.getSceneGraph().getPhysicsEngine();
 		physicsEngine.setGravity(new float[]{0f, -9.8f, 0f});
 
+		// Enable physics rendering
 		engine.enableGraphicsWorldRender();
 		engine.enablePhysicsWorldRender();
 
-		// Create physics walls (invisible)
-		float radius = 20f, h = 5f, t = 0.5f, L = 42f, m0 = 0f;
-		Matrix4f m = new Matrix4f();
-		float[] tmp = new float[16];
+		// Setup physics objects
+		PhysicsBuilder.setupStaticPhysics(engine);
 
-		float mass = 1.0f;
-		float up[ ] = {0,1,0};
-		radius = 0.75f;
-		float height = 2.0f;
-		double[ ] tempTransform;
-
-		m.translation(0, h/2, -14); m.get(tmp);
-		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{L,h,t}); //left wall
-		m.translation(0, h/2, 16);  m.get(tmp);
-		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{L,h,t}); //right wall
-		m.translation(1, h/2, -1); m.get(tmp);
-		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{2f,h,24f}); //counter front wall
-		m.translation(21, h/2, 0);  m.get(tmp);
-		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{t,h,L}); //Back wall
-		m.translation(-22, h/2, -9);  m.get(tmp);
-		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{t,h,11f}); //Front left wall
-		m.translation(-21, h/2, 10);  m.get(tmp);
-		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{t,h,11f}); //Front right wall
-
-		// Create player physics body
-		player.getLocalTranslation().get(tmp);
-		playerPhys = engine.getSceneGraph().addPhysicsCylinder(1f, toDouble(tmp), 0.5f, 0.2f);
-		playerPhys.setFriction(1f);
-		playerPhys.setBounciness(0f);
-		player.setPhysicsObject(playerPhys);
+		// Setup player physics
+		playerPhys = PhysicsBuilder.setupPlayerPhysics(engine, player);
 		ghostManager = new GhostManager(this);
 		setupNetworking();
 		lastFrameTime = System.currentTimeMillis();
