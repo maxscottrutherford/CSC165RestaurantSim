@@ -63,15 +63,15 @@ public class game extends VariableFrameRateGame
 
 
 	//Gameobjects
-	private GameObject terrain, restaurant, bacon, bellPepper, cashRegister, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,
-	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table, waLL;
+	private GameObject terrain, oven, restaurant, bacon, bellPepper, cashRegister, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,pantryShelf1,
+	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table,table1, waLL;
 
 	//Gameobject shapes
-	private ObjShape terrainS, baconS, restaurantS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
+	private ObjShape terrainS, baconS,ovenS, restaurantS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
 	pizzaS, playerS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, waLLS;
 
 	//Gameobject textures
-	private TextureImage terrainTx, hills, baconTx, restaurantTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
+	private TextureImage terrainTx, hills, ovenTx, baconTx, restaurantTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
 	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, waLLTx;
 
 	private Light light1;
@@ -130,6 +130,7 @@ public class game extends VariableFrameRateGame
 		tableS = new ImportedModel("table.obj");
 		waLLS = new ImportedModel("wall.obj");
 		terrainS = new TerrainPlane(1000);
+		ovenS = new ImportedModel("oven.obj");
 	}
 	
 	//Load the textures for the game objects
@@ -163,6 +164,7 @@ public class game extends VariableFrameRateGame
 		terrainTx = new TextureImage("terrain.jpg");
 		hills = new TextureImage("hills.png");
 		restaurantTx = new TextureImage("Sam - Texture.png");
+		ovenTx = new TextureImage("oven.png");
 		//load the textures for the game objects
 	}
 
@@ -189,6 +191,58 @@ public class game extends VariableFrameRateGame
 		restaurant.setLocalTranslation(new Matrix4f().translation(0, 0, 0));
 		restaurant.setLocalRotation(new Matrix4f().rotationX((float) Math.toRadians(-180)));
 		restaurant.setLocalScale(scale);
+
+		table = new GameObject(GameObject.root(), tableS, tablev);
+		table.setLocalTranslation(new Matrix4f().translation(-13, -1, 10));
+		table.setLocalScale(new Matrix4f().scaling(2.5f));
+
+		table1 = new GameObject(GameObject.root(), tableS, tablev);
+		table1.setLocalTranslation(new Matrix4f().translation(-13, -1, -8));
+		table1.setLocalScale(new Matrix4f().scaling(2.5f));
+
+		chair = new GameObject(GameObject.root(), chairS, chairTx);
+		chair.setLocalTranslation(new Matrix4f().translation(-9, 1.5f, -8));
+		chair.setLocalScale(new Matrix4f().scaling(3.5f));
+
+		chair = new GameObject(GameObject.root(), chairS, chairTx);
+		chair.setLocalTranslation(new Matrix4f().translation(-13, 1.5f, -4f));
+		chair.setLocalScale(new Matrix4f().scaling(3.5f));
+		chair.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+
+		chair = new GameObject(GameObject.root(), chairS, chairTx);
+		chair.setLocalTranslation(new Matrix4f().translation(-13, 1.5f, 6f));
+		chair.setLocalScale(new Matrix4f().scaling(3.5f));
+		chair.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
+
+		chair = new GameObject(GameObject.root(), chairS, chairTx);
+		chair.setLocalTranslation(new Matrix4f().translation(-9, 1.5f, 10f));
+		chair.setLocalScale(new Matrix4f().scaling(3.5f));
+
+		pantryShelf = new GameObject(GameObject.root(), pantryShelfS, pantryShelfTx);
+		pantryShelf.setLocalTranslation(new Matrix4f().translation(14, 3.8f, 15.7f));
+		pantryShelf.setLocalScale(new Matrix4f().scaling(3.5f));
+		pantryShelf.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
+
+		pantryShelf1 = new GameObject(GameObject.root(), pantryShelfS, pantryShelfTx);
+		pantryShelf1.setLocalTranslation(new Matrix4f().translation(16.5f, 3.8f, -13f));
+		pantryShelf1.setLocalScale(new Matrix4f().scaling(3.5f));
+		pantryShelf1.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+
+		cashRegister = new GameObject(GameObject.root(), cashRegisterS, cashRegisterTx);
+		cashRegister.setLocalTranslation(new Matrix4f().translation(1, 2.3f, 0.5f));
+		cashRegister.setLocalScale(new Matrix4f().scaling(2.5f));
+		cashRegister.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+
+		cashRegister = new GameObject(GameObject.root(), cashRegisterS, cashRegisterTx);
+		cashRegister.setLocalTranslation(new Matrix4f().translation(1, 2.3f, 6.5f));
+		cashRegister.setLocalScale(new Matrix4f().scaling(2.5f));
+		cashRegister.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+
+		oven = new GameObject(GameObject.root(), ovenS, ovenTx);
+		oven.setLocalTranslation(new Matrix4f().translation(6.5f, 0f, -13f));
+		oven.setLocalScale(new Matrix4f().scaling(1.5f));
+		oven.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
+
 
 		
 
@@ -297,17 +351,21 @@ public class game extends VariableFrameRateGame
 	public void initializeGame()
 	{	
 
-		engine.enablePhysicsWorldRender();
+		//engine.enablePhysicsWorldRender();
 		engine.getRenderSystem().getGLCanvas().addMouseMotionListener(this);
 		physicsEngine = engine.getSceneGraph().getPhysicsEngine();
 		physicsEngine.setGravity(new float[]{0f, -9.8f, 0f});
 
 		// Enable physics rendering
 		engine.enableGraphicsWorldRender();
-		engine.enablePhysicsWorldRender();
 
 		// Setup physics objects
 		PhysicsBuilder.setupStaticPhysics(engine);
+		PhysicsBuilder.setupStaticBox(engine, oven, new float[]{3.5f, 2f, 2.5f});
+		PhysicsBuilder.setupStaticBox(engine, table, new float[]{5.5f, 5f, 5.5f});
+		PhysicsBuilder.setupStaticBox(engine, table1, new float[]{5.5f, 5f, 5.5f});
+		PhysicsBuilder.setupStaticBox(engine, pantryShelf, new float[]{5.5f, 6f, 3.5f});
+		PhysicsBuilder.setupStaticBox(engine, pantryShelf1, new float[]{5.5f, 6f, 3.5f});
 
 		// Setup player physics
 		playerPhys = PhysicsBuilder.setupPlayerPhysics(engine, player);

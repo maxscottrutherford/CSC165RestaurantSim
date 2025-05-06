@@ -46,6 +46,12 @@ public class PhysicsBuilder {
 		return playerPhys;
 	}
 
+    public static void setupStaticBox(Engine engine, GameObject obj, float[] size) {
+        float[] tmp = new float[16];
+        obj.getLocalTranslation().get(tmp);
+        engine.getSceneGraph().addPhysicsBox(0f, toDouble(tmp), size);
+    }
+
 	private static double[] toDouble(float[] input) {
 		double[] out = new double[input.length];
 		for (int i = 0; i < input.length; i++)
