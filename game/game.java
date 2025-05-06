@@ -18,7 +18,7 @@ import java.net.InetAddress;
 import org.joml.*;
 import org.joml.Math;
 
-public class game extends VariableFrameRateGame
+public class game extends VariableFrameRateGame implements MouseMotionListener
 {
 	private static Engine engine;
 
@@ -86,6 +86,8 @@ public class game extends VariableFrameRateGame
     private Ambience currentAmbience = Ambience.NONE;
 	private PhysicsObject playerPhys;
 	private float moveForce = 2f;
+	private int lastMouseX = -1;
+	private float mouseSensitivity = 0.2f;
 	
  
 	public game() { super(); }
@@ -202,6 +204,15 @@ public class game extends VariableFrameRateGame
 		terrain.getRenderStates().setTiling(1);
 		terrain.getRenderStates().setTileFactor(100);
 
+		float[] tmp = new float[16];
+		Matrix4f groundMat = new Matrix4f().translation(0f, 0f, 0f); // y=0
+		groundMat.get(tmp);
+		engine.getSceneGraph().addPhysicsBox(
+			0f,                           // mass = 0 = static
+			toDouble(tmp),               // transform
+			new float[]{1000f, 1f, 1000f}  // size of terrain box (x,y,z)
+);
+
 	}
 
 	@Override
@@ -287,20 +298,21 @@ public class game extends VariableFrameRateGame
 		for (int i = 0; i < f.length; i++) d[i] = (double) f[i];
 		return d;
 	}
+	
 	@Override
 	public void initializeGame()
 	{	
 
 		engine.enablePhysicsWorldRender();
-			
+		engine.getRenderSystem().getGLCanvas().addMouseMotionListener(this);
 		physicsEngine = engine.getSceneGraph().getPhysicsEngine();
-		physicsEngine.setGravity(new float[]{0f, -5f, 0f});
+		physicsEngine.setGravity(new float[]{0f, -9.8f, 0f});
 
 		engine.enableGraphicsWorldRender();
 		engine.enablePhysicsWorldRender();
 
 		// Create physics walls (invisible)
-		float radius = 20f, h = 5f, t = 0.5f, L = radius * 2, m0 = 0f;
+		float radius = 20f, h = 5f, t = 0.5f, L = 42f, m0 = 0f;
 		Matrix4f m = new Matrix4f();
 		float[] tmp = new float[16];
 
@@ -310,19 +322,24 @@ public class game extends VariableFrameRateGame
 		float height = 2.0f;
 		double[ ] tempTransform;
 
-		m.translation(0, h/2, -radius); m.get(tmp);
-		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{L,h,t});
-		m.translation(0, h/2, radius);  m.get(tmp);
-		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{L,h,t});
-		m.translation(-radius, h/2, 0); m.get(tmp);
-		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{t,h,L});
-		m.translation(radius, h/2, 0);  m.get(tmp);
-		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{t,h,L});
+		m.translation(0, h/2, -14); m.get(tmp);
+		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{L,h,t}); //left wall
+		m.translation(0, h/2, 16);  m.get(tmp);
+		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{L,h,t}); //right wall
+		m.translation(1, h/2, -1); m.get(tmp);
+		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{2f,h,24f}); //counter front wall
+		m.translation(21, h/2, 0);  m.get(tmp);
+		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{t,h,L}); //Back wall
+		m.translation(-22, h/2, -9);  m.get(tmp);
+		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{t,h,11f}); //Front left wall
+		m.translation(-21, h/2, 10);  m.get(tmp);
+		engine.getSceneGraph().addPhysicsBox(m0, toDouble(tmp), new float[]{t,h,11f}); //Front right wall
 
 		// Create player physics body
 		player.getLocalTranslation().get(tmp);
-		playerPhys = engine.getSceneGraph().addPhysicsCylinder(1f, toDouble(tmp), 0.5f, 2f);
+		playerPhys = engine.getSceneGraph().addPhysicsCylinder(1f, toDouble(tmp), 0.5f, 0.2f);
 		playerPhys.setFriction(1f);
+		playerPhys.setBounciness(0f);
 		player.setPhysicsObject(playerPhys);
 		ghostManager = new GhostManager(this);
 		setupNetworking();
@@ -368,10 +385,11 @@ public class game extends VariableFrameRateGame
 		return ret;
 		}
 
-		@Override
+	@Override
 	public void update() {
+		System.out.println(player.getWorldLocation().x() + " " + player.getWorldLocation().y() + " " + player.getWorldLocation().z());
 		Vector3f loc, fwd, up, right;
-		
+
 		lastFrameTime = currFrameTime;
 		currFrameTime = System.currentTimeMillis();
 		elapsTime += (currFrameTime - lastFrameTime) / 1000.0;
@@ -380,71 +398,73 @@ public class game extends VariableFrameRateGame
 		float height = terrain.getHeight(loc.x(), loc.z());
 		player.setLocalLocation(new Vector3f(loc.x(), height, loc.z()));
 
-		cam = (engine.getRenderSystem()).getViewport("MAIN").getCamera();
+		cam = engine.getRenderSystem().getViewport("MAIN").getCamera();
 		loc = player.getWorldLocation();
 		fwd = player.getWorldForwardVector();
 		up = player.getWorldUpVector();
 		right = player.getWorldRightVector();
+
 		cam.setU(right);
 		cam.setV(up);
 		cam.setN(fwd);
-	cam.setLocation(loc.add(up.mul(6f)).add(fwd.mul(-10.0f)));
-	Matrix4f mat = new Matrix4f();
+		cam.setLocation(loc.add(up.mul(6f)).add(fwd.mul(-10.0f)));
 
-	footstepSound.setLocation(player.getWorldLocation());
+		footstepSound.setLocation(player.getWorldLocation());
+		processNetworking(elapsTime);
 
-	processNetworking(elapsTime);
-
-	boolean moving = upPressed || downPressed || leftPressed || rightPressed;
-	if (moving) {
-		if (!footstepSound.getIsPlaying()) {
-			footstepSound.setLocation(player.getWorldLocation());
-			footstepSound.play();
+		boolean moving = upPressed || downPressed || leftPressed || rightPressed;
+		if (moving) {
+			if (!footstepSound.getIsPlaying()) footstepSound.play();
+		} else {
+			if (footstepSound.getIsPlaying()) footstepSound.stop();
 		}
-	} else {
-		if (footstepSound.getIsPlaying()) {
-			footstepSound.stop();
+
+		updateAmbience();
+		setEarParameters();
+
+		float fx = 0f, fy = 0f, fz = 0f;
+
+		if (upPressed) {
+			fx -= fwd.x();
+			fz -= fwd.z();
+		}
+		if (downPressed) {
+			fx += fwd.x();
+			fz += fwd.z();
+		}
+		if (leftPressed) {
+			fx -= right.x();
+			fz -= right.z();
+		}
+		if (rightPressed) {
+			fx += right.x();
+			fz += right.z();
+		}
+
+		if (fx != 0 || fz != 0) {
+			playerPhys.applyForce(fx * 5f, fy, fz * 5f, 0f, 0f, 0f);
+		} else {
+			float[] vel = playerPhys.getLinearVelocity();
+			vel[0] = 0; // stop X
+			vel[2] = 0; // stop Z
+			playerPhys.setLinearVelocity(vel);
+		}
+
+		physicsEngine.update((float) elapsTime);
+
+		double[] tf = playerPhys.getTransform();
+		player.setLocalTranslation(new Matrix4f().translation(
+			(float) tf[12], (float) tf[13], (float) tf[14]
+		));
+
+		Matrix4f mat = new Matrix4f();
+		for (GameObject go : engine.getSceneGraph().getGameObjects()) {
+			if (go.getPhysicsObject() != null) {
+				mat.set(toFloatArray(go.getPhysicsObject().getTransform()));
+			}
 		}
 	}
 
-	updateAmbience();
-	setEarParameters();
-
-	float fx = 0f, fy = 0f, fz = 0f;
-
-	 fwd = player.getWorldForwardVector();
-	 right = player.getWorldRightVector();
-
-	if (upPressed) {
-		fx += fwd.x() ;
-		fz += fwd.z() ;
-	}
-	if (downPressed) {
-		fx -= fwd.x() ;
-		fz -= fwd.z() ;
-	}
-	if (leftPressed) {
-		fx -= right.x() ;
-		fz -= right.z() ;
-	}
-	if (rightPressed) {
-		fx += right.x() ;
-		fz += right.z() ;
-	}
-
-	if (fx != 0 || fz != 0) {
-		playerPhys.applyForce(fx*50, fy, fz*50, 0f, 0f, 0f);
-	}
-	physicsEngine.update((float)elapsTime);
-	double[] tf = playerPhys.getTransform();
-	player.setLocalTranslation(new Matrix4f().translation((float) tf[12], (float) tf[13], (float) tf[14]));
-	for (GameObject go:engine.getSceneGraph().getGameObjects())
-	{ if (go.getPhysicsObject() != null)
-	{ // set translation
-		mat.set(toFloatArray(go.getPhysicsObject().getTransform()));
-	}
-}
-	}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
@@ -477,5 +497,24 @@ public class game extends VariableFrameRateGame
 			case KeyEvent.VK_D: rightPressed = false; break;
 		}
 		super.keyReleased(e);
+	}
+
+	@Override
+	public void mouseMoved(MouseEvent e) {
+		if (lastMouseX != -1) {
+			int deltaX = e.getX() - lastMouseX;
+
+			// Rotate player left/right based on mouse movement
+			float rotationAmount = (float) Math.toRadians(-deltaX * mouseSensitivity);
+			player.setLocalRotation(
+				new Matrix4f().rotateY(rotationAmount).mul(player.getLocalRotation())
+			);
+		}
+		lastMouseX = e.getX();
+	}
+
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		mouseMoved(e); // treat drag like move
 	}
 }
