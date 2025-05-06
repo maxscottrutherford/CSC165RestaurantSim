@@ -9,7 +9,6 @@ import tage.audio.SoundType;
 import tage.networking.IGameConnection.ProtocolType;
 import tage.physics.PhysicsEngine;
 import tage.physics.PhysicsObject;
-import tage.physics.JBullet.JBulletPhysicsEngine;
 import tage.shapes.*;
 
 import java.awt.event.*;
@@ -18,7 +17,7 @@ import java.net.InetAddress;
 import org.joml.*;
 import org.joml.Math;
 
-public class game extends VariableFrameRateGame implements MouseMotionListener
+public class game extends VariableFrameRateGame
 {
 	private static Engine engine;
 
@@ -88,6 +87,7 @@ public class game extends VariableFrameRateGame implements MouseMotionListener
 	private float moveForce = 2f;
 	private int lastMouseX = -1;
 	private float mouseSensitivity = 0.2f;
+	private PlayerController playerController;
 	
  
 	public game() { super(); }
@@ -284,15 +284,9 @@ public class game extends VariableFrameRateGame implements MouseMotionListener
 		audioMgr.getEar().setOrientation(
 		cam.getN(), new Vector3f(0f, 1f, 0f));
 	}
-	private float[] tmpMat = new float[16];
 
 
 
-	private float[] toFloat(double[] d) {
-		float[] f = new float[d.length];
-		for (int i = 0; i < d.length; i++) f[i] = (float) d[i];
-		return f;
-	}
 	private double[] toDouble(float[] f) {
 		double[] d = new double[f.length];
 		for (int i = 0; i < f.length; i++) d[i] = (double) f[i];
@@ -317,6 +311,10 @@ public class game extends VariableFrameRateGame implements MouseMotionListener
 
 		// Setup player physics
 		playerPhys = PhysicsBuilder.setupPlayerPhysics(engine, player);
+
+		// Setup player movement controller
+		playerController = new PlayerController(player, playerPhys, engine);
+
 		ghostManager = new GhostManager(this);
 		setupNetworking();
 		lastFrameTime = System.currentTimeMillis();
@@ -397,35 +395,7 @@ public class game extends VariableFrameRateGame implements MouseMotionListener
 
 		updateAmbience();
 		setEarParameters();
-
-		float fx = 0f, fy = 0f, fz = 0f;
-
-		if (upPressed) {
-			fx -= fwd.x();
-			fz -= fwd.z();
-		}
-		if (downPressed) {
-			fx += fwd.x();
-			fz += fwd.z();
-		}
-		if (leftPressed) {
-			fx -= right.x();
-			fz -= right.z();
-		}
-		if (rightPressed) {
-			fx += right.x();
-			fz += right.z();
-		}
-
-		if (fx != 0 || fz != 0) {
-			playerPhys.applyForce(fx * 5f, fy, fz * 5f, 0f, 0f, 0f);
-		} else {
-			float[] vel = playerPhys.getLinearVelocity();
-			vel[0] = 0; // stop X
-			vel[2] = 0; // stop Z
-			playerPhys.setLinearVelocity(vel);
-		}
-
+		playerController.updateMovement((float) elapsTime);
 		physicsEngine.update((float) elapsTime);
 
 		double[] tf = playerPhys.getTransform();
@@ -439,58 +409,5 @@ public class game extends VariableFrameRateGame implements MouseMotionListener
 				mat.set(toFloatArray(go.getPhysicsObject().getTransform()));
 			}
 		}
-	}
-
-
-	@Override
-	public void keyPressed(KeyEvent e) {
-		switch(e.getKeyCode()) {
-			case KeyEvent.VK_W: upPressed    = true;  break;
-			case KeyEvent.VK_S: downPressed  = true;  break;
-			case KeyEvent.VK_A: leftPressed  = true;  break;
-			case KeyEvent.VK_D: rightPressed = true;  break;
-			case KeyEvent.VK_Q:
-				player.setLocalRotation(
-					new Matrix4f().rotateY((float)Math.toRadians(5))
-						.mul(player.getLocalRotation())
-				);
-				break;
-			case KeyEvent.VK_E:
-				player.setLocalRotation(
-					new Matrix4f().rotateY((float)Math.toRadians(-5))
-						.mul(player.getLocalRotation())
-				);
-				break;
-		}
-	}
-
-	@Override
-	public void keyReleased(KeyEvent e) {
-		switch(e.getKeyCode()) {
-			case KeyEvent.VK_W: upPressed    = false; break;
-			case KeyEvent.VK_S: downPressed  = false; break;
-			case KeyEvent.VK_A: leftPressed  = false; break;
-			case KeyEvent.VK_D: rightPressed = false; break;
-		}
-		super.keyReleased(e);
-	}
-
-	@Override
-	public void mouseMoved(MouseEvent e) {
-		if (lastMouseX != -1) {
-			int deltaX = e.getX() - lastMouseX;
-
-			// Rotate player left/right based on mouse movement
-			float rotationAmount = (float) Math.toRadians(-deltaX * mouseSensitivity);
-			player.setLocalRotation(
-				new Matrix4f().rotateY(rotationAmount).mul(player.getLocalRotation())
-			);
-		}
-		lastMouseX = e.getX();
-	}
-
-	@Override
-	public void mouseDragged(MouseEvent e) {
-		mouseMoved(e); // treat drag like move
 	}
 }
