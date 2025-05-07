@@ -79,6 +79,7 @@ public class PlayerController implements KeyListener, MouseMotionListener {
 				new Matrix4f().rotateY((float) Math.toRadians(-5))
 					.mul(player.getLocalRotation())
 			);
+			
 		}
 	}
 
@@ -103,7 +104,7 @@ public class PlayerController implements KeyListener, MouseMotionListener {
 		}
 		lastMouseX = e.getX();
 	}
-
+	
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		mouseMoved(e);
@@ -111,7 +112,6 @@ public class PlayerController implements KeyListener, MouseMotionListener {
 
     @Override
     public void keyTyped(KeyEvent e) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'keyTyped'");
+        // Not used
     }
 }

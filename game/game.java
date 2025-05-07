@@ -17,6 +17,9 @@ import java.net.InetAddress;
 import org.joml.*;
 import org.joml.Math;
 
+import com.jogamp.opengl.awt.GLCanvas;
+import com.jogamp.opengl.util.gl2.GLUT;
+
 public class game extends VariableFrameRateGame
 {
 	private static Engine engine;
@@ -27,6 +30,7 @@ public class game extends VariableFrameRateGame
 	//Camera 
 	private Camera cam;
 
+
 	//Networking objects and related functions
 	private GhostManager ghostManager;
 	private ProtocolClient protClient;
@@ -36,6 +40,13 @@ public class game extends VariableFrameRateGame
 	private boolean upPressed, downPressed, leftPressed, rightPressed;
 	private float   stepTimer      = 0f;
 	private final float STEP_INTERVAL = 0.5f;  // seconds between steps
+	private boolean menuActive = true;
+	private GameObject menuBG;
+	private boolean showHUD = false;
+	
+	
+
+
 	public GhostManager getGhostManager() {
 		return ghostManager;
 	}
@@ -88,6 +99,8 @@ public class game extends VariableFrameRateGame
 	private int lastMouseX = -1;
 	private float mouseSensitivity = 0.2f;
 	private PlayerController playerController;
+	private boolean hudViewportVisible = false;
+	private Viewport hudViewport;
 	
  
 	public game() { super(); }
@@ -130,7 +143,7 @@ public class game extends VariableFrameRateGame
 		tableS = new ImportedModel("table.obj");
 		waLLS = new ImportedModel("wall.obj");
 		terrainS = new TerrainPlane(1000);
-		ovenS = new ImportedModel("oven.obj");
+		ovenS = new ImportedModel("cube.obj");
 	}
 	
 	//Load the textures for the game objects
@@ -164,7 +177,8 @@ public class game extends VariableFrameRateGame
 		terrainTx = new TextureImage("terrain.jpg");
 		hills = new TextureImage("hills.png");
 		restaurantTx = new TextureImage("Sam - Texture.png");
-		ovenTx = new TextureImage("oven.png");
+		ovenTx = new TextureImage("cube.png");
+		TextureImage menuBgTx = new TextureImage("menu.png");
 		//load the textures for the game objects
 	}
 
@@ -239,8 +253,11 @@ public class game extends VariableFrameRateGame
 		cashRegister.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
 
 		oven = new GameObject(GameObject.root(), ovenS, ovenTx);
-		oven.setLocalTranslation(new Matrix4f().translation(6.5f, 0f, -13f));
-		oven.setLocalScale(new Matrix4f().scaling(1.5f));
+		oven.setLocalTranslation(new Matrix4f().translation(0f, 0f, -10000f));
+		oven.setLocalRotation(new Matrix4f().identity());
+		oven.setLocalScale(new Matrix4f().scaling(5.2f));
+		//oven.setLocalTranslation(new Matrix4f().translation(6.5f, 0f, -13f));
+		//oven.setLocalScale(new Matrix4f().scaling(1.5f));
 		oven.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 
 
@@ -350,11 +367,15 @@ public class game extends VariableFrameRateGame
 	@Override
 	public void initializeGame()
 	{	
-
+		engine.disableGraphicsWorldRender();
+		engine.disablePhysicsWorldRender();
 		//engine.enablePhysicsWorldRender();
+
+	
 		engine.getRenderSystem().getGLCanvas().addMouseMotionListener(this);
 		physicsEngine = engine.getSceneGraph().getPhysicsEngine();
 		physicsEngine.setGravity(new float[]{0f, -9.8f, 0f});
+
 
 		// Enable physics rendering
 		engine.enableGraphicsWorldRender();
@@ -383,6 +404,7 @@ public class game extends VariableFrameRateGame
 		outsideSound.stop();
 		outsideSound.play();
         currentAmbience = Ambience.OUTSIDE;
+
 		
 	}
 
@@ -419,9 +441,9 @@ public class game extends VariableFrameRateGame
 
 	@Override
 	public void update() {
-		System.out.println(player.getWorldLocation().x() + " " + player.getWorldLocation().y() + " " + player.getWorldLocation().z());
+		
+		//System.out.println(player.getWorldLocation().x() + " " + player.getWorldLocation().y() + " " + player.getWorldLocation().z());
 		Vector3f loc, fwd, up, right;
-
 		lastFrameTime = currFrameTime;
 		currFrameTime = System.currentTimeMillis();
 		elapsTime += (currFrameTime - lastFrameTime) / 1000.0;
@@ -468,4 +490,47 @@ public class game extends VariableFrameRateGame
 			}
 		}
 	}
+
+	@Override
+public void keyPressed(KeyEvent e) {
+	if (menuActive && e.getKeyCode() == KeyEvent.VK_ENTER) {
+		engine.getSceneGraph().removeGameObject(menuBG);
+		menuBG = null;
+		menuActive = false;
+
+		// Clear HUD
+		engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
+		engine.getHUDmanager().setHUD2("", new Vector3f(), 0, 0);
+		engine.enableGraphicsWorldRender();
+		engine.enablePhysicsWorldRender();
+		return;
+	}
+
+	if (e.getKeyCode() == KeyEvent.VK_L) {
+	hudViewportVisible = !hudViewportVisible;
+
+	if (hudViewportVisible) {
+		// Create HUD viewport centered on screen
+		hudViewport = engine.getRenderSystem().addViewport("HUD", 0.25f, 0.2f, 0.5f, 0.5f);
+		hudViewport.setHasBorder(true);
+		hudViewport.setBorderColor(1f, 1f, 1f);
+		hudViewport.setBorderWidth(2);
+
+		// Set HUD camera to view oven
+		Camera hudCam = hudViewport.getCamera();
+		hudCam.setLocation(new Vector3f(0f, 13f, -10000f));
+		hudCam.lookAt(oven);
+	} else {
+		// Fully remove HUD viewport
+		hudViewport = engine.getRenderSystem().addViewport("HUD", 0.0f, 0.0f, 0.0f, 0.0f);
+		// We can't directly remove the viewport, so just make it inert
+	}
+}
+}
+
+
+	@Override
+public void keyTyped(KeyEvent e) {
+    // Not used
+}
 }
