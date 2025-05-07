@@ -30,6 +30,11 @@ public class game extends VariableFrameRateGame
 	//Camera 
 	private Camera cam;
 
+<<<<<<< HEAD
+=======
+	//AI Controller
+	private CustomerAIController customerAI;
+>>>>>>> cc13aba244a9e3684069d4f8825a54284550d218
 
 	//Networking objects and related functions
 	private GhostManager ghostManager;
@@ -197,9 +202,14 @@ public class game extends VariableFrameRateGame
 		Matrix4f playerScale = new Matrix4f().scaling(1.8f);
 
 		player = new GameObject(GameObject.root(), playerS, playerTx);
-		player.setLocalTranslation(new Matrix4f().translation(-50, 2, 10));
+		player.setLocalTranslation(new Matrix4f().translation(-50, 1, 10));
 		player.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 		player.setLocalScale(playerScale);
+
+		customer = new GameObject(GameObject.root(), customerS, customerTx);
+		customer.setLocalTranslation(new Matrix4f().translation(-70, 0, 0));
+		customer.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
+		customer.setLocalScale(playerScale);
 
 		restaurant = new GameObject(GameObject.root(), restaurantS, restaurantTx);
 		restaurant.setLocalTranslation(new Matrix4f().translation(0, 0, 0));
@@ -376,6 +386,11 @@ public class game extends VariableFrameRateGame
 		physicsEngine = engine.getSceneGraph().getPhysicsEngine();
 		physicsEngine.setGravity(new float[]{0f, -9.8f, 0f});
 
+<<<<<<< HEAD
+=======
+		//enable customer AI
+		customerAI = new CustomerAIController(customer, player);
+>>>>>>> cc13aba244a9e3684069d4f8825a54284550d218
 
 		// Enable physics rendering
 		engine.enableGraphicsWorldRender();
@@ -488,6 +503,10 @@ public class game extends VariableFrameRateGame
 			if (go.getPhysicsObject() != null) {
 				mat.set(toFloatArray(go.getPhysicsObject().getTransform()));
 			}
+		}
+
+		if (customerAI != null) {
+			customerAI.update((float) elapsTime);
 		}
 	}
 
