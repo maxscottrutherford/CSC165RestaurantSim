@@ -30,11 +30,9 @@ public class game extends VariableFrameRateGame
 	//Camera 
 	private Camera cam;
 
-<<<<<<< HEAD
-=======
 	//AI Controller
 	private CustomerAIController customerAI;
->>>>>>> cc13aba244a9e3684069d4f8825a54284550d218
+	private GameLogic gameLogic;
 
 	//Networking objects and related functions
 	private GhostManager ghostManager;
@@ -80,15 +78,15 @@ public class game extends VariableFrameRateGame
 
 	//Gameobjects
 	private GameObject terrain, oven, restaurant, bacon, bellPepper, cashRegister, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,pantryShelf1,
-	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table,table1, waLL;
+	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table,table1, waLL, oven1;
 
 	//Gameobject shapes
 	private ObjShape terrainS, baconS,ovenS, restaurantS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
-	pizzaS, playerS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, waLLS;
+	pizzaS, playerS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, oven1S, waLLS;
 
 	//Gameobject textures
 	private TextureImage terrainTx, hills, ovenTx, baconTx, restaurantTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
-	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, waLLTx;
+	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, oven1tx, waLLTx;
 
 	private Light light1;
 	private double lastFrameTime, currFrameTime, elapsTime;
@@ -149,6 +147,7 @@ public class game extends VariableFrameRateGame
 		waLLS = new ImportedModel("wall.obj");
 		terrainS = new TerrainPlane(1000);
 		ovenS = new ImportedModel("cube.obj");
+		oven1S = new ImportedModel("oven.obj");
 	}
 	
 	//Load the textures for the game objects
@@ -184,6 +183,7 @@ public class game extends VariableFrameRateGame
 		restaurantTx = new TextureImage("Sam - Texture.png");
 		ovenTx = new TextureImage("cube.png");
 		TextureImage menuBgTx = new TextureImage("menu.png");
+		oven1tx = new TextureImage("oven.png");
 		//load the textures for the game objects
 	}
 
@@ -266,12 +266,13 @@ public class game extends VariableFrameRateGame
 		oven.setLocalTranslation(new Matrix4f().translation(0f, 0f, -10000f));
 		oven.setLocalRotation(new Matrix4f().identity());
 		oven.setLocalScale(new Matrix4f().scaling(5.2f));
-		//oven.setLocalTranslation(new Matrix4f().translation(6.5f, 0f, -13f));
-		//oven.setLocalScale(new Matrix4f().scaling(1.5f));
+	
 		oven.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 
-
-		
+		oven1 = new GameObject(GameObject.root(), oven1S, oven1tx);
+		oven1.setLocalTranslation(new Matrix4f().translation(6.5f, 0f, -13f));
+		oven1.setLocalScale(new Matrix4f().scaling(1.5f));
+		oven1.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 
 		// build terrain object
 		terrain = new GameObject(GameObject.root(), terrainS);
@@ -386,18 +387,15 @@ public class game extends VariableFrameRateGame
 		physicsEngine = engine.getSceneGraph().getPhysicsEngine();
 		physicsEngine.setGravity(new float[]{0f, -9.8f, 0f});
 
-<<<<<<< HEAD
-=======
 		//enable customer AI
 		customerAI = new CustomerAIController(customer, player);
->>>>>>> cc13aba244a9e3684069d4f8825a54284550d218
 
 		// Enable physics rendering
 		engine.enableGraphicsWorldRender();
 
 		// Setup physics objects
 		PhysicsBuilder.setupStaticPhysics(engine);
-		PhysicsBuilder.setupStaticBox(engine, oven, new float[]{3.5f, 2f, 2.5f});
+		PhysicsBuilder.setupStaticBox(engine, oven1, new float[]{3.5f, 2f, 2.5f});
 		PhysicsBuilder.setupStaticBox(engine, table, new float[]{5.5f, 5f, 5.5f});
 		PhysicsBuilder.setupStaticBox(engine, table1, new float[]{5.5f, 5f, 5.5f});
 		PhysicsBuilder.setupStaticBox(engine, pantryShelf, new float[]{5.5f, 6f, 3.5f});
@@ -419,6 +417,8 @@ public class game extends VariableFrameRateGame
 		outsideSound.stop();
 		outsideSound.play();
         currentAmbience = Ambience.OUTSIDE;
+		gameLogic = new GameLogic(player, oven1, engine);
+
 
 		
 	}
@@ -508,6 +508,8 @@ public class game extends VariableFrameRateGame
 		if (customerAI != null) {
 			customerAI.update((float) elapsTime);
 		}
+		if (gameLogic != null) gameLogic.update();
+
 	}
 
 	@Override
@@ -540,11 +542,14 @@ public void keyPressed(KeyEvent e) {
 		hudCam.setLocation(new Vector3f(0f, 13f, -10000f));
 		hudCam.lookAt(oven);
 	} else {
-		// Fully remove HUD viewport
 		hudViewport = engine.getRenderSystem().addViewport("HUD", 0.0f, 0.0f, 0.0f, 0.0f);
-		// We can't directly remove the viewport, so just make it inert
+		
 	}
 }
+if (e.getKeyCode() == KeyEvent.VK_F && gameLogic != null) {
+	gameLogic.tryStartCooking();
+}
+
 }
 
 
