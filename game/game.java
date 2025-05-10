@@ -417,7 +417,7 @@ public class game extends VariableFrameRateGame
 		outsideSound.stop();
 		outsideSound.play();
         currentAmbience = Ambience.OUTSIDE;
-		gameLogic = new GameLogic(player, oven1, engine);
+		gameLogic = new GameLogic(player, customer, oven1, engine);
 
 
 		
@@ -508,47 +508,56 @@ public class game extends VariableFrameRateGame
 		if (customerAI != null) {
 			customerAI.update((float) elapsTime);
 		}
-		if (gameLogic != null) gameLogic.update();
+		
+		if (gameLogic != null) gameLogic.update((float)elapsTime);
 
 	}
 
 	@Override
-public void keyPressed(KeyEvent e) {
-	if (menuActive && e.getKeyCode() == KeyEvent.VK_ENTER) {
-		engine.getSceneGraph().removeGameObject(menuBG);
-		menuBG = null;
-		menuActive = false;
+	public void keyPressed(KeyEvent e) {
+		if (menuActive && e.getKeyCode() == KeyEvent.VK_ENTER) {
+			engine.getSceneGraph().removeGameObject(menuBG);
+			menuBG = null;
+			menuActive = false;
 
-		// Clear HUD
-		engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
-		engine.getHUDmanager().setHUD2("", new Vector3f(), 0, 0);
-		engine.enableGraphicsWorldRender();
-		engine.enablePhysicsWorldRender();
-		return;
+			// Clear HUD
+			engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
+			engine.getHUDmanager().setHUD2("", new Vector3f(), 0, 0);
+			engine.enableGraphicsWorldRender();
+			engine.enablePhysicsWorldRender();
+			return;
+		}
+
+		if (e.getKeyCode() == KeyEvent.VK_L) {
+		hudViewportVisible = !hudViewportVisible;
+
+		if (hudViewportVisible) {
+			// Create HUD viewport centered on screen
+			hudViewport = engine.getRenderSystem().addViewport("HUD", 0.25f, 0.2f, 0.5f, 0.5f);
+			hudViewport.setHasBorder(true);
+			hudViewport.setBorderColor(1f, 1f, 1f);
+			hudViewport.setBorderWidth(2);
+
+			// Set HUD camera to view oven
+			Camera hudCam = hudViewport.getCamera();
+			hudCam.setLocation(new Vector3f(0f, 13f, -10000f));
+			hudCam.lookAt(oven);
+		} else {
+			hudViewport = engine.getRenderSystem().addViewport("HUD", 0.0f, 0.0f, 0.0f, 0.0f);
+			
+		}
 	}
 
-	if (e.getKeyCode() == KeyEvent.VK_L) {
-	hudViewportVisible = !hudViewportVisible;
+	if (e.getKeyCode() == KeyEvent.VK_F && gameLogic != null) {
+		float distToCust = player.getWorldLocation().distance(customer.getWorldLocation());
+		float distToOven = player.getWorldLocation().distance(oven1.getWorldLocation());
 
-	if (hudViewportVisible) {
-		// Create HUD viewport centered on screen
-		hudViewport = engine.getRenderSystem().addViewport("HUD", 0.25f, 0.2f, 0.5f, 0.5f);
-		hudViewport.setHasBorder(true);
-		hudViewport.setBorderColor(1f, 1f, 1f);
-		hudViewport.setBorderWidth(2);
-
-		// Set HUD camera to view oven
-		Camera hudCam = hudViewport.getCamera();
-		hudCam.setLocation(new Vector3f(0f, 13f, -10000f));
-		hudCam.lookAt(oven);
-	} else {
-		hudViewport = engine.getRenderSystem().addViewport("HUD", 0.0f, 0.0f, 0.0f, 0.0f);
-		
+		if (distToCust < 5.0f) {
+			gameLogic.tryTakeOrder();
+		} else if (distToOven < 5.0f) {
+			gameLogic.tryStartCooking();
+		}
 	}
-}
-if (e.getKeyCode() == KeyEvent.VK_F && gameLogic != null) {
-	gameLogic.tryStartCooking();
-}
 
 }
 
