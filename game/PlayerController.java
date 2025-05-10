@@ -5,21 +5,24 @@ import org.joml.Math;
 
 import tage.*;
 import tage.physics.PhysicsObject;
+import tage.shapes.AnimatedShape;
 
 import java.awt.event.*;
 
 public class PlayerController implements KeyListener, MouseMotionListener {
 	private GameObject player;
 	private PhysicsObject playerPhys;
+	private AnimatedShape playerS;
 	private Engine engine;
 	private float mouseSensitivity = 0.2f;
 	private int lastMouseX = -1;
 	private boolean upPressed, downPressed, leftPressed, rightPressed;
 
-	public PlayerController(GameObject player, PhysicsObject playerPhys, Engine engine) {
+	public PlayerController(GameObject player, PhysicsObject playerPhys, Engine engine, AnimatedShape playerS) {
 		this.player = player;
 		this.playerPhys = playerPhys;
 		this.engine = engine;
+		this.playerS = playerS;
 
 		engine.getRenderSystem().getGLCanvas().addKeyListener(this);
 		engine.getRenderSystem().getGLCanvas().addMouseMotionListener(this);
@@ -67,8 +70,13 @@ public class PlayerController implements KeyListener, MouseMotionListener {
 	@Override
 	public void keyPressed(KeyEvent e) {
 		switch (e.getKeyCode()) {
-			case KeyEvent.VK_W -> upPressed = true;
-			case KeyEvent.VK_S -> downPressed = true;
+
+			case KeyEvent.VK_W -> {upPressed = true; 
+			playerS.playAnimation("WALK", 0.2f,
+			AnimatedShape.EndType.LOOP, 2);} 
+
+			case KeyEvent.VK_S -> {downPressed = true; playerS.stopAnimation();
+				break;}
 			case KeyEvent.VK_A -> leftPressed = true;
 			case KeyEvent.VK_D -> rightPressed = true;
 			case KeyEvent.VK_Q -> player.setLocalRotation(
@@ -86,7 +94,7 @@ public class PlayerController implements KeyListener, MouseMotionListener {
 	@Override
 	public void keyReleased(KeyEvent e) {
 		switch (e.getKeyCode()) {
-			case KeyEvent.VK_W -> upPressed = false;
+			case KeyEvent.VK_W -> {upPressed = false; playerS.stopAnimation();}
 			case KeyEvent.VK_S -> downPressed = false;
 			case KeyEvent.VK_A -> leftPressed = false;
 			case KeyEvent.VK_D -> rightPressed = false;

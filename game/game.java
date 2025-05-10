@@ -46,6 +46,7 @@ public class game extends VariableFrameRateGame
 	private boolean menuActive = true;
 	private GameObject menuBG;
 	private boolean showHUD = false;
+	private AnimatedShape playerS;
 	
 	
 
@@ -82,7 +83,7 @@ public class game extends VariableFrameRateGame
 
 	//Gameobject shapes
 	private ObjShape terrainS, baconS,ovenS, restaurantS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
-	pizzaS, playerS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, oven1S, waLLS;
+	pizzaS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, oven1S, waLLS;
 
 	//Gameobject textures
 	private TextureImage terrainTx, hills, ovenTx, baconTx, restaurantTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
@@ -136,7 +137,8 @@ public class game extends VariableFrameRateGame
 		pantryShelfS = new ImportedModel("pantryShelf.obj");
 		pepperoniS = new ImportedModel("pepperoni.obj");
 		pizzaS = new ImportedModel("pizza.obj");
-		playerS = new ImportedModel("player.obj");
+		playerS = new AnimatedShape("playerModel.rkm", "playerModel.rks");
+		playerS.loadAnimation("WALK", "playerModel.rka");
 		posterS = new ImportedModel("poster.obj");
 		posterWideS = new ImportedModel("posterWide.obj");
 		saucecanS = new ImportedModel("sauceCan.obj");
@@ -205,6 +207,10 @@ public class game extends VariableFrameRateGame
 		player.setLocalTranslation(new Matrix4f().translation(-50, 1, 10));
 		player.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 		player.setLocalScale(playerScale);
+		player.getRenderStates().setModelOrientationCorrection(
+		(new Matrix4f()).rotationY((float)java.lang.Math.toRadians(90.0f)));
+		player.getRenderStates().setModelOrientationCorrection(
+		(new Matrix4f()).rotationX((float)java.lang.Math.toRadians(90.0f)));
 
 		customer = new GameObject(GameObject.root(), customerS, customerTx);
 		customer.setLocalTranslation(new Matrix4f().translation(-70, 0, 0));
@@ -405,7 +411,7 @@ public class game extends VariableFrameRateGame
 		playerPhys = PhysicsBuilder.setupPlayerPhysics(engine, player);
 
 		// Setup player movement controller
-		playerController = new PlayerController(player, playerPhys, engine);
+		playerController = new PlayerController(player, playerPhys, engine, playerS);
 
 		ghostManager = new GhostManager(this);
 		setupNetworking();
@@ -509,6 +515,7 @@ public class game extends VariableFrameRateGame
 			customerAI.update((float) elapsTime);
 		}
 		if (gameLogic != null) gameLogic.update();
+		playerS.updateAnimation();
 
 	}
 
