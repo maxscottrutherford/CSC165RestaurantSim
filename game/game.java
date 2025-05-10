@@ -98,7 +98,7 @@ public class game extends VariableFrameRateGame
 
 	private Light light1;
 	private double lastFrameTime, currFrameTime, elapsTime;
-	private int fluffyClouds; // skyboxes
+	private int sunsetSkybox; // skyboxes
 	private Sound insideSound, outsideSound, footstepSound;
 	private IAudioManager audioMgr;
 	private float restaurantRadius = 20f;
@@ -206,8 +206,8 @@ public class game extends VariableFrameRateGame
 	@Override
 	public void loadSkyBoxes()
 	{ 
-		fluffyClouds = (engine.getSceneGraph()).loadCubeMap("fluffyClouds");
-		(engine.getSceneGraph()).setActiveSkyBoxTexture(fluffyClouds);
+		sunsetSkybox = (engine.getSceneGraph()).loadCubeMap("sunsetSkybox");
+		(engine.getSceneGraph()).setActiveSkyBoxTexture(sunsetSkybox);
 		(engine.getSceneGraph()).setSkyBoxEnabled(true);
 	}
 
@@ -299,6 +299,7 @@ public class game extends VariableFrameRateGame
 		oven1.setLocalTranslation(new Matrix4f().translation(6.5f, 0f, -13f));
 		oven1.setLocalScale(new Matrix4f().scaling(1.5f));
 		oven1.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
+
 		//speaker
 		speaker = new GameObject(GameObject.root(), speakerS, speakerTx);
 		speaker.setLocalTranslation(new Matrix4f().translation(-2f, 0f, -13f));
@@ -623,9 +624,6 @@ public class game extends VariableFrameRateGame
 			gameLogic.tryStartCooking();
 		} else if (distToThief < 5.0f) {
 			thiefController.tryCatch();
-		}
-		else if (distToSpeaker < 5.0f) {
-			gameLogic.tryToggleMusic();
 		}
 		else if (distToSpeaker < 5.0f) {
 			gameLogic.tryToggleMusic();
