@@ -13,6 +13,9 @@ import tage.shapes.*;
 
 import java.awt.event.*;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.joml.*;
 import org.joml.Math;
@@ -49,6 +52,8 @@ public class game extends VariableFrameRateGame
 	private boolean menuActive = true;
 	private GameObject menuBG;
 	private boolean showHUD = false;
+	private AnimatedShape playerS;
+	private InventoryManager inventory;
 	
 	
 
@@ -81,15 +86,15 @@ public class game extends VariableFrameRateGame
 
 	//Gameobjects
 	private GameObject terrain, oven, restaurant, bacon, bellPepper, cashRegister, cashRegister1, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,pantryShelf1,
-	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table,table1, thief, waLL, oven1;
+	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table,table1, thief, waLL, oven1, speaker, car, pc;
 
 	//Gameobject shapes
 	private ObjShape terrainS, baconS,ovenS, restaurantS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
-	pizzaS, playerS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, oven1S, waLLS;
+	pizzaS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, oven1S, waLLS, speakerS, carS, pcS;
 
 	//Gameobject textures
 	private TextureImage terrainTx, hills, ovenTx, baconTx, restaurantTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
-	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, thiefTx, oven1tx, waLLTx;
+	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, thiefTx, oven1tx, waLLTx, speakerTx, carTx, pcTx;
 
 	private Light light1;
 	private double lastFrameTime, currFrameTime, elapsTime;
@@ -117,6 +122,7 @@ public class game extends VariableFrameRateGame
 		engine = new Engine(game);
 		game.initializeSystem();
 		game.game_loop();
+		
 	}
 	
 	//Load the shapes for the game objects
@@ -139,7 +145,8 @@ public class game extends VariableFrameRateGame
 		pantryShelfS = new ImportedModel("pantryShelf.obj");
 		pepperoniS = new ImportedModel("pepperoni.obj");
 		pizzaS = new ImportedModel("pizza.obj");
-		playerS = new ImportedModel("player.obj");
+		playerS = new AnimatedShape("playerModel.rkm", "playerModel.rks");
+		playerS.loadAnimation("WALK", "playerModel.rka");
 		posterS = new ImportedModel("poster.obj");
 		posterWideS = new ImportedModel("posterWide.obj");
 		saucecanS = new ImportedModel("sauceCan.obj");
@@ -151,6 +158,10 @@ public class game extends VariableFrameRateGame
 		terrainS = new TerrainPlane(1000);
 		ovenS = new ImportedModel("cube.obj");
 		oven1S = new ImportedModel("oven.obj");
+		speakerS = new ImportedModel("speaker.obj");
+		pcS = new ImportedModel("pc.obj");
+
+		
 	}
 	
 	//Load the textures for the game objects
@@ -187,6 +198,8 @@ public class game extends VariableFrameRateGame
 		ovenTx = new TextureImage("cube.png");
 		TextureImage menuBgTx = new TextureImage("menu.png");
 		oven1tx = new TextureImage("oven.png");
+		speakerTx = new TextureImage("speaker.png");
+		pcTx = new TextureImage("pc.png");
 		//load the textures for the game objects
 	}
 
@@ -208,6 +221,10 @@ public class game extends VariableFrameRateGame
 		player.setLocalTranslation(new Matrix4f().translation(-25, 1, 0));
 		player.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 		player.setLocalScale(playerScale);
+		player.getRenderStates().setModelOrientationCorrection(
+		(new Matrix4f()).rotationY((float)java.lang.Math.toRadians(90.0f)));
+		player.getRenderStates().setModelOrientationCorrection(
+		(new Matrix4f()).rotationX((float)java.lang.Math.toRadians(90.0f)));
 
 		customer = new GameObject(GameObject.root(), customerS, customerTx);
 		customer.setLocalTranslation(new Matrix4f().translation(-50, 0, 0));
@@ -262,7 +279,7 @@ public class game extends VariableFrameRateGame
 		pantryShelf1.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
 
 		cashRegister = new GameObject(GameObject.root(), cashRegisterS, cashRegisterTx);
-		cashRegister.setLocalTranslation(new Matrix4f().translation(1, 2.3f, 0.5f));
+		cashRegister.setLocalTranslation(new Matrix4f().translation(1, 1.5f, 0.5f));
 		cashRegister.setLocalScale(new Matrix4f().scaling(2.5f));
 		cashRegister.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
 
@@ -282,6 +299,17 @@ public class game extends VariableFrameRateGame
 		oven1.setLocalTranslation(new Matrix4f().translation(6.5f, 0f, -13f));
 		oven1.setLocalScale(new Matrix4f().scaling(1.5f));
 		oven1.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
+		//speaker
+		speaker = new GameObject(GameObject.root(), speakerS, speakerTx);
+		speaker.setLocalTranslation(new Matrix4f().translation(-2f, 0f, -13f));
+		speaker.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+		speaker.setLocalScale(new Matrix4f().scaling(2.5f));
+
+		//pc
+		pc = new GameObject(GameObject.root(), pcS, pcTx);
+		pc.setLocalTranslation(new Matrix4f().translation(1, 2.3f, -5f));
+		pc.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+		pc.setLocalScale(new Matrix4f().scaling(1f));
 
 		// build terrain object
 		terrain = new GameObject(GameObject.root(), terrainS);
@@ -340,11 +368,14 @@ public class game extends VariableFrameRateGame
 	public void loadSounds() {
 		audioMgr = engine.getAudioManager();
 
-		// inside ambience
-		AudioResource inRes = audioMgr.createAudioResource(
-			"b.wav", AudioResourceType.AUDIO_STREAM);
-		insideSound = new Sound(inRes, SoundType.SOUND_MUSIC, 60, true);
+		AudioResource bgRes = audioMgr.createAudioResource("b.wav", AudioResourceType.AUDIO_SAMPLE);
+		insideSound = new Sound(bgRes, SoundType.SOUND_EFFECT, 60, true); // volume = 60
 		insideSound.initialize(audioMgr);
+		insideSound.setLocation(speaker.getWorldLocation());
+		insideSound.setMaxDistance(40f); // adjust falloff range
+		insideSound.setMinDistance(0.25f);
+		insideSound.setRollOff(0.25f);
+		insideSound.play();
 
 	
 		// outside ambience
@@ -358,8 +389,8 @@ public class game extends VariableFrameRateGame
 		footstepSound = new Sound(stepRes, SoundType.SOUND_EFFECT, 80, true);
 		footstepSound.initialize(audioMgr);
 		footstepSound.setMinDistance(1f);
-		footstepSound.setMaxDistance(10f);
-		footstepSound.setRollOff(1f);
+		footstepSound.setMaxDistance(40f);
+		footstepSound.setRollOff(5f);
 
 	
 	}
@@ -390,7 +421,8 @@ public class game extends VariableFrameRateGame
 		engine.disableGraphicsWorldRender();
 		engine.disablePhysicsWorldRender();
 		//engine.enablePhysicsWorldRender();
-
+		InventoryManager inventory = new InventoryManager();
+		this.inventory = inventory;
 	
 		engine.getRenderSystem().getGLCanvas().addMouseMotionListener(this);
 		physicsEngine = engine.getSceneGraph().getPhysicsEngine();
@@ -411,7 +443,7 @@ public class game extends VariableFrameRateGame
 		playerPhys = PhysicsBuilder.setupPlayerPhysics(engine, player);
 
 		// Setup player movement controller
-		playerController = new PlayerController(player, playerPhys, engine);
+		playerController = new PlayerController(player, playerPhys, engine, playerS);
 
 		ghostManager = new GhostManager(this);
 		setupNetworking();
@@ -423,21 +455,9 @@ public class game extends VariableFrameRateGame
 		outsideSound.stop();
 		outsideSound.play();
         currentAmbience = Ambience.OUTSIDE;
-		gameLogic = new GameLogic(player, customer, oven1, engine);
+		gameLogic = new GameLogic(player, customer, oven1, speaker, insideSound, inventory, engine);
 
-		//create the cash manager
-		cashManager = new CashManager(0.0);
-		cashManager.addListener(newBalance ->
-        engine.getHUDmanager().setHUD2(
-          "Cash: $" + String.format("%.2f", newBalance),
-          new Vector3f(1,1,0), 50, 50
-        )
-    	);
 
-		Vector3f exitSpot = new Vector3f(-20f, 1f, 0f);
-		thiefController = new ThiefBehaviorController(
-		thief, cashRegister1, exitSpot, player, cashManager
-		);
 		
 	}
 
@@ -506,8 +526,9 @@ public class game extends VariableFrameRateGame
 			if (footstepSound.getIsPlaying()) footstepSound.stop();
 		}
 
-		updateAmbience();
-		setEarParameters();
+		insideSound.setLocation(speaker.getWorldLocation());
+		setEarParameters(); 
+
 		playerController.updateMovement((float) elapsTime);
 		physicsEngine.update((float) elapsTime);
 
@@ -522,6 +543,7 @@ public class game extends VariableFrameRateGame
 				mat.set(toFloatArray(go.getPhysicsObject().getTransform()));
 			}
 		}
+
 		
 		if (gameLogic != null) gameLogic.update((float)elapsTime);
 
@@ -592,6 +614,7 @@ public class game extends VariableFrameRateGame
 	if (e.getKeyCode() == KeyEvent.VK_F && gameLogic != null) {
 		float distToCust = player.getWorldLocation().distance(customer.getWorldLocation());
 		float distToOven = player.getWorldLocation().distance(oven1.getWorldLocation());
+		float distToSpeaker = player.getWorldLocation().distance(speaker.getWorldLocation());
 		float distToThief = player.getWorldLocation().distance(thief.getWorldLocation());
 
 		if (distToCust < 5.0f) {
@@ -600,6 +623,12 @@ public class game extends VariableFrameRateGame
 			gameLogic.tryStartCooking();
 		} else if (distToThief < 5.0f) {
 			thiefController.tryCatch();
+		}
+		else if (distToSpeaker < 5.0f) {
+			gameLogic.tryToggleMusic();
+		}
+		else if (distToSpeaker < 5.0f) {
+			gameLogic.tryToggleMusic();
 		}
 	}
 
