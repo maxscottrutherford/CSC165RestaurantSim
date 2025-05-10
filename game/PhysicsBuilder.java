@@ -32,6 +32,31 @@ public class PhysicsBuilder {
 
 		m.translation(-21, h/2, 10); m.get(tmp);
 		sg.addPhysicsBox(m0, toDouble(tmp), new float[]{t,h,11f});
+
+		float wallLength = 500f;
+		float wallHeight = 5f;
+		float wallThickness = 1f;
+		float half = wallLength / 2f;
+
+		// Top wall (along X-axis) at z = +half
+		m.translation(0f, wallHeight / 2f, half);
+		m.get(tmp);
+		sg.addPhysicsBox(m0, toDouble(tmp), new float[]{wallLength, wallHeight, wallThickness});
+
+		// Bottom wall at z = -half
+		m.translation(0f, wallHeight / 2f, -half);
+		m.get(tmp);
+		sg.addPhysicsBox(m0, toDouble(tmp), new float[]{wallLength, wallHeight, wallThickness});
+
+		// Left wall (along Z-axis) at x = -half
+		m.translation(-half, wallHeight / 2f, 0f);
+		m.get(tmp);
+		sg.addPhysicsBox(m0, toDouble(tmp), new float[]{wallThickness, wallHeight, wallLength});
+
+		// Right wall at x = +half
+		m.translation(half, wallHeight / 2f, 0f);
+		m.get(tmp);
+		sg.addPhysicsBox(m0, toDouble(tmp), new float[]{wallThickness, wallHeight, wallLength});
 	}
 
 	public static PhysicsObject setupPlayerPhysics(Engine engine, GameObject player) {

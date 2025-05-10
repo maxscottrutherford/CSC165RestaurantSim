@@ -72,8 +72,8 @@ public class PlayerController implements KeyListener, MouseMotionListener {
 		switch (e.getKeyCode()) {
 
 			case KeyEvent.VK_W -> {upPressed = true; 
-			playerS.playAnimation("WALK", 0.2f,
-			AnimatedShape.EndType.LOOP, 2);} 
+			playerS.playAnimation("WALK", 0.5f,
+			AnimatedShape.EndType.LOOP, 100);} 
 
 			case KeyEvent.VK_S -> {downPressed = true; playerS.stopAnimation();
 				break;}

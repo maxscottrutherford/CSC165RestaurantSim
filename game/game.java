@@ -54,6 +54,10 @@ public class game extends VariableFrameRateGame
 	private boolean showHUD = false;
 	private AnimatedShape playerS;
 	private InventoryManager inventory;
+	private long hudMessageStartTime = 0;
+	private final long hudMessageDuration = 3000; // 3 seconds
+	private boolean showTimedHUDMessage = false;
+
 	
 	
 
@@ -112,6 +116,14 @@ public class game extends VariableFrameRateGame
 	private PlayerController playerController;
 	private boolean hudViewportVisible = false;
 	private Viewport hudViewport;
+	private boolean nearPC = false;
+	private boolean orderingActive = false;
+	private Vector3f savedCamPos, savedCamU, savedCamV, savedCamN;
+	private String[] menuItems = {"1. Mushroom - $5", "2. Pepperoni - $4", "3. Cheese - $3", "4. Sauce - $2"};
+	private int[] menuPrices = {5, 4, 3, 2};
+	private long exitMenuStartTime = 0;
+	private boolean isExitMenuScheduled = false;
+
 	
  
 	public game() { super(); }
@@ -315,7 +327,7 @@ public class game extends VariableFrameRateGame
 		// build terrain object
 		terrain = new GameObject(GameObject.root(), terrainS);
 		terrain.setLocalTranslation(new Matrix4f().translation(0f,0f,0f));
-		Matrix4f initialScale = (new Matrix4f()).scaling(100.0f, 1.0f, 100.0f);
+		Matrix4f initialScale = (new Matrix4f()).scaling(1000.0f, 1.0f, 1000.0f);
 		terrain.setLocalScale(initialScale);
 		terrain.setIsTerrain(true);
 		terrain.setTextureImage(terrainTx);
@@ -424,7 +436,8 @@ public class game extends VariableFrameRateGame
 		//engine.enablePhysicsWorldRender();
 		InventoryManager inventory = new InventoryManager();
 		this.inventory = inventory;
-	
+		CashManager cashManager = new CashManager(50);
+		this.cashManager = cashManager;
 		engine.getRenderSystem().getGLCanvas().addMouseMotionListener(this);
 		physicsEngine = engine.getSceneGraph().getPhysicsEngine();
 		physicsEngine.setGravity(new float[]{0f, -9.8f, 0f});
@@ -460,6 +473,12 @@ public class game extends VariableFrameRateGame
 
 
 		
+	}
+
+	public void showTimedMessage(String message, Vector3f color) {
+		engine.getHUDmanager().setHUD2(message, color, 100, 590);
+		hudMessageStartTime = System.currentTimeMillis();
+		showTimedHUDMessage = true;
 	}
 
 	private void updateAmbience() {
@@ -575,66 +594,220 @@ public class game extends VariableFrameRateGame
 				);
 			}
 		}
+
+		//Hud for Inventory Tracking
+		int canvasHeight = engine.getRenderSystem().getGLCanvas().getHeight();
+		int startX = 20;
+		int startY = canvasHeight - 40;
+
+		Map<String, Integer> invMap = inventory.getInventory();
+		List<String> lines = new ArrayList<>();
+
+		for (Map.Entry<String, Integer> entry : invMap.entrySet()) {
+			lines.add(entry.getKey() + ": " + entry.getValue());
+		}
+
+		engine.getHUDmanager().setHUD3Lines(lines, new Vector3f(1, 0, 0), startX, startY);
+		engine.getHUDmanager().setHUD3font(GLUT.BITMAP_TIMES_ROMAN_24);
+
+		// Order
+		Vector3f playerPos = player.getWorldLocation();
+		Vector3f pcPos = pc.getWorldLocation();
+		float distToPC = playerPos.distance(pcPos);
+		nearPC = (distToPC < 5.0f);
+
+		if (!orderingActive && nearPC) {
+			engine.getHUDmanager().setHUD1("Press O to order ingredients", new Vector3f(1,1,1), 800, 700);
+		} else if (!orderingActive) {
+			engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
+		}
+		// Exit order mode after delay
+		if (isExitMenuScheduled) {
+			long now = System.currentTimeMillis();
+			if (now - exitMenuStartTime > 3000) {
+				exitOrderMode();
+				isExitMenuScheduled = false;
+			}
+		}
+		// Money HUD
+		GLCanvas canvas = engine.getRenderSystem().getGLCanvas();
+		int canvasWidth = canvas.getWidth();
+		String moneyText = "Cash: $" + cashManager.getBalance();
+		int estimatedWidth = moneyText.length() * 8;
+		int x = canvasWidth - estimatedWidth - 50; 
+		int y = canvasHeight - 30; 
+
+		engine.getHUDmanager().setHUD4(moneyText, new Vector3f(1f, 1f, 0.6f), x, y);
+
 	}
+
+
+	private void zoomCamToPC() {
+    Camera cam = engine.getRenderSystem().getViewport("MAIN").getCamera();
+
+    savedCamPos = cam.getLocation();
+    savedCamU = cam.getU();
+    savedCamV = cam.getV();
+    savedCamN = cam.getN();
+
+    Vector3f pcLoc = pc.getWorldLocation();
+    Vector3f offset = new Vector3f(0f, 2f, 4f);
+    Vector3f newCamPos = new Vector3f(pcLoc).add(offset);
+
+    cam.setLocation(newCamPos);
+    cam.lookAt(pcLoc);
+}
+
+	private void exitOrderMode() {
+		orderingActive = false;
+
+		engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
+		engine.getHUDmanager().setHUD2("", new Vector3f(), 0, 0);
+		engine.getHUDmanager().setHUD3("", new Vector3f(), 0, 0);
+
+		Camera cam = engine.getRenderSystem().getViewport("MAIN").getCamera();
+		cam.setLocation(savedCamPos);
+		cam.setU(savedCamU);
+		cam.setV(savedCamV);
+		cam.setN(savedCamN);
+	}
+
+	private void showOrderMenu() {
+		orderingActive = true;
+
+		String msg = "Select an ingredient to buy: 1. Mushroom = $5   2. Pepperoni = $4   3. Cheese = $3   4. Sauce = $2";
+
+		// Get canvas dimensions
+		int canvasWidth = engine.getRenderSystem().getGLCanvas().getWidth();
+		int canvasHeight = engine.getRenderSystem().getGLCanvas().getHeight();
+
+		// Roughly estimate string width (8px per character for Times Roman 24)
+		int estimatedTextWidth = msg.length() * 8;
+
+		// Center horizontally and push down from the top
+		int x = (canvasWidth / 2) - (estimatedTextWidth / 2);
+		int y = canvasHeight - 80;  // Adjust as needed for spacing
+
+		// Show HUD1
+		engine.getHUDmanager().setHUD1(msg, new Vector3f(1f, 1f, 0.6f), x, y);
+		engine.getHUDmanager().setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
+	}
+	private void buyItem(int index) {
+		int cost = menuPrices[index];
+		String itemName = menuItems[index].split("\\.")[1].trim().split(" -")[0].toLowerCase();
+
+		String msg;
+		Vector3f color;
+
+		if (cashManager.getBalance() >= cost) {
+			cashManager.deductExpense(cost);
+			inventory.addItem(itemName);
+			msg = "Purchased: " + itemName + " for $" + cost;
+			color = new Vector3f(0, 1, 0); // green
+		} else {
+			msg = "Not enough cash for " + itemName + " ($" + cost + ")";
+			color = new Vector3f(1, 0, 0); // red
+		}
+
+		// Get canvas info
+		int canvasWidth = engine.getRenderSystem().getGLCanvas().getWidth();
+		int canvasHeight = engine.getRenderSystem().getGLCanvas().getHeight();
+
+		// Estimate width of the text
+		int estimatedTextWidth = msg.length() * 8;
+
+		// Center horizontally, and position just below HUD1 (which is at y = canvasHeight - 80)
+		int x = (canvasWidth / 2) - (estimatedTextWidth / 2);
+		int y = canvasHeight - 110; // ~30 pixels below HUD1
+
+		engine.getHUDmanager().setHUD2(msg, color, x, y);
+		engine.getHUDmanager().setHUD2font(GLUT.BITMAP_TIMES_ROMAN_24);
+
+		// Start delayed exit
+		exitMenuStartTime = System.currentTimeMillis();
+		isExitMenuScheduled = true;
+	}
+
+
+
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		if (menuActive && e.getKeyCode() == KeyEvent.VK_ENTER) {
-			engine.getSceneGraph().removeGameObject(menuBG);
-			menuBG = null;
-			menuActive = false;
 
-			// Clear HUD
-			engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
-			engine.getHUDmanager().setHUD2("", new Vector3f(), 0, 0);
-			engine.enableGraphicsWorldRender();
-			engine.enablePhysicsWorldRender();
-			return;
-		}
+    // MAIN MENU LOGIC
+    if (menuActive && e.getKeyCode() == KeyEvent.VK_ENTER) {
+        engine.getSceneGraph().removeGameObject(menuBG);
+        menuBG = null;
+        menuActive = false;
 
+        // Clear HUD
+        engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
+        engine.getHUDmanager().setHUD2("", new Vector3f(), 0, 0);
+        engine.getHUDmanager().setHUD3("", new Vector3f(), 0, 0);
+        engine.enableGraphicsWorldRender();
+        engine.enablePhysicsWorldRender();
+        return;
+    }
+
+		// OVEN VIEWPORT TOGGLE (L KEY)
 		if (e.getKeyCode() == KeyEvent.VK_L) {
-		hudViewportVisible = !hudViewportVisible;
+			hudViewportVisible = !hudViewportVisible;
 
-		if (hudViewportVisible) {
-			// Create HUD viewport centered on screen
-			hudViewport = engine.getRenderSystem().addViewport("HUD", 0.25f, 0.2f, 0.5f, 0.5f);
-			hudViewport.setHasBorder(true);
-			hudViewport.setBorderColor(1f, 1f, 1f);
-			hudViewport.setBorderWidth(2);
+			if (hudViewportVisible) {
+				hudViewport = engine.getRenderSystem().addViewport("HUD", 0.25f, 0.2f, 0.5f, 0.5f);
+				hudViewport.setHasBorder(true);
+				hudViewport.setBorderColor(1f, 1f, 1f);
+				hudViewport.setBorderWidth(2);
 
-			// Set HUD camera to view oven
-			Camera hudCam = hudViewport.getCamera();
-			hudCam.setLocation(new Vector3f(0f, 13f, -10000f));
-			hudCam.lookAt(oven);
-		} else {
-			hudViewport = engine.getRenderSystem().addViewport("HUD", 0.0f, 0.0f, 0.0f, 0.0f);
-			
+				Camera hudCam = hudViewport.getCamera();
+				hudCam.setLocation(new Vector3f(0f, 13f, -10000f));
+				hudCam.lookAt(oven);
+			} else {
+				hudViewport = engine.getRenderSystem().addViewport("HUD", 0.0f, 0.0f, 0.0f, 0.0f);
+			}
+		}
+
+		// INTERACTIONS (F KEY)
+		if (e.getKeyCode() == KeyEvent.VK_F && gameLogic != null) {
+			float distToCust = player.getWorldLocation().distance(customer.getWorldLocation());
+			float distToOven = player.getWorldLocation().distance(oven1.getWorldLocation());
+			float distToSpeaker = player.getWorldLocation().distance(speaker.getWorldLocation());
+			float distToThief = player.getWorldLocation().distance(thief.getWorldLocation());
+
+			if (distToCust < 5.0f) {
+				gameLogic.tryTakeOrder();
+			} else if (distToOven < 5.0f) {
+				gameLogic.tryStartCooking();
+			} else if (distToThief < 5.0f) {
+				thiefController.tryCatch();
+			} else if (distToSpeaker < 5.0f) {
+				gameLogic.tryToggleMusic();
+			}
+		}
+
+		// ORDERING SYSTEM START (O KEY)
+		if (e.getKeyCode() == KeyEvent.VK_O && nearPC && !orderingActive) {
+			zoomCamToPC();
+			showOrderMenu();
+		}
+
+		// ORDERING SELECTION (1–4)
+		if (orderingActive && e.getKeyCode() >= KeyEvent.VK_1 && e.getKeyCode() <= KeyEvent.VK_4) {
+			int choice = e.getKeyCode() - KeyEvent.VK_1;
+			buyItem(choice);
+		}
+
+		// CANCEL ORDER (Backspace)
+		if (orderingActive && e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+			exitOrderMode();
 		}
 	}
 
-	if (e.getKeyCode() == KeyEvent.VK_F && gameLogic != null) {
-		float distToCust = player.getWorldLocation().distance(customer.getWorldLocation());
-		float distToOven = player.getWorldLocation().distance(oven1.getWorldLocation());
-		float distToSpeaker = player.getWorldLocation().distance(speaker.getWorldLocation());
-		float distToThief = player.getWorldLocation().distance(thief.getWorldLocation());
 
-		if (distToCust < 5.0f) {
-			gameLogic.tryTakeOrder();
-		} else if (distToOven < 5.0f) {
-			gameLogic.tryStartCooking();
-		} else if (distToThief < 5.0f) {
-			thiefController.tryCatch();
-		}
-		else if (distToSpeaker < 5.0f) {
-			gameLogic.tryToggleMusic();
-		}
-	}
-
-}
 
 
 	@Override
-public void keyTyped(KeyEvent e) {
-    // Not used
-}
+	public void keyTyped(KeyEvent e) {
+		// Not used
+	}
 }

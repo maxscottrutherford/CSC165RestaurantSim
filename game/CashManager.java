@@ -13,7 +13,7 @@ public class CashManager {
     /** 
      * Start with an initial balance (e.g. 0.0 or a float-down payment). 
      */
-    public CashManager(double startingBalance) {
+    public CashManager(double startingBalance ) {
         this.balance = startingBalance;
     }
 
