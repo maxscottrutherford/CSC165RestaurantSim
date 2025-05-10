@@ -31,8 +31,11 @@ public class game extends VariableFrameRateGame
 	private Camera cam;
 
 	//AI Controller
-	private CustomerAIController customerAI;
+	private ThiefBehaviorController thiefController;
 	private GameLogic gameLogic;
+
+	//Score/CashManager
+	private CashManager cashManager;
 
 	//Networking objects and related functions
 	private GhostManager ghostManager;
@@ -77,8 +80,8 @@ public class game extends VariableFrameRateGame
 
 
 	//Gameobjects
-	private GameObject terrain, oven, restaurant, bacon, bellPepper, cashRegister, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,pantryShelf1,
-	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table,table1, waLL, oven1;
+	private GameObject terrain, oven, restaurant, bacon, bellPepper, cashRegister, cashRegister1, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,pantryShelf1,
+	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table,table1, thief, waLL, oven1;
 
 	//Gameobject shapes
 	private ObjShape terrainS, baconS,ovenS, restaurantS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
@@ -86,7 +89,7 @@ public class game extends VariableFrameRateGame
 
 	//Gameobject textures
 	private TextureImage terrainTx, hills, ovenTx, baconTx, restaurantTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
-	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, oven1tx, waLLTx;
+	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, thiefTx, oven1tx, waLLTx;
 
 	private Light light1;
 	private double lastFrameTime, currFrameTime, elapsTime;
@@ -202,14 +205,20 @@ public class game extends VariableFrameRateGame
 		Matrix4f playerScale = new Matrix4f().scaling(1.8f);
 
 		player = new GameObject(GameObject.root(), playerS, playerTx);
-		player.setLocalTranslation(new Matrix4f().translation(-50, 1, 10));
+		player.setLocalTranslation(new Matrix4f().translation(-25, 1, 0));
 		player.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 		player.setLocalScale(playerScale);
 
 		customer = new GameObject(GameObject.root(), customerS, customerTx);
-		customer.setLocalTranslation(new Matrix4f().translation(-70, 0, 0));
+		customer.setLocalTranslation(new Matrix4f().translation(-50, 0, 0));
 		customer.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 		customer.setLocalScale(playerScale);
+
+		thief = new GameObject(GameObject.root(), customerS, customerTx);
+		thief.setLocalTranslation(new Matrix4f().translation(-80, 0, 0));
+		thief.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
+		thief.setLocalScale(playerScale);
+
 
 		restaurant = new GameObject(GameObject.root(), restaurantS, restaurantTx);
 		restaurant.setLocalTranslation(new Matrix4f().translation(0, 0, 0));
@@ -257,10 +266,10 @@ public class game extends VariableFrameRateGame
 		cashRegister.setLocalScale(new Matrix4f().scaling(2.5f));
 		cashRegister.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
 
-		cashRegister = new GameObject(GameObject.root(), cashRegisterS, cashRegisterTx);
-		cashRegister.setLocalTranslation(new Matrix4f().translation(1, 2.3f, 6.5f));
-		cashRegister.setLocalScale(new Matrix4f().scaling(2.5f));
-		cashRegister.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+		cashRegister1 = new GameObject(GameObject.root(), cashRegisterS, cashRegisterTx);
+		cashRegister1.setLocalTranslation(new Matrix4f().translation(1, 2.3f, 6.5f));
+		cashRegister1.setLocalScale(new Matrix4f().scaling(2.5f));
+		cashRegister1.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
 
 		oven = new GameObject(GameObject.root(), ovenS, ovenTx);
 		oven.setLocalTranslation(new Matrix4f().translation(0f, 0f, -10000f));
@@ -387,9 +396,6 @@ public class game extends VariableFrameRateGame
 		physicsEngine = engine.getSceneGraph().getPhysicsEngine();
 		physicsEngine.setGravity(new float[]{0f, -9.8f, 0f});
 
-		//enable customer AI
-		customerAI = new CustomerAIController(customer, player);
-
 		// Enable physics rendering
 		engine.enableGraphicsWorldRender();
 
@@ -419,7 +425,19 @@ public class game extends VariableFrameRateGame
         currentAmbience = Ambience.OUTSIDE;
 		gameLogic = new GameLogic(player, customer, oven1, engine);
 
+		//create the cash manager
+		cashManager = new CashManager(0.0);
+		cashManager.addListener(newBalance ->
+        engine.getHUDmanager().setHUD2(
+          "Cash: $" + String.format("%.2f", newBalance),
+          new Vector3f(1,1,0), 50, 50
+        )
+    	);
 
+		Vector3f exitSpot = new Vector3f(-20f, 1f, 0f);
+		thiefController = new ThiefBehaviorController(
+		thief, cashRegister1, exitSpot, player, cashManager
+		);
 		
 	}
 
@@ -504,13 +522,36 @@ public class game extends VariableFrameRateGame
 				mat.set(toFloatArray(go.getPhysicsObject().getTransform()));
 			}
 		}
-
-		if (customerAI != null) {
-			customerAI.update((float) elapsTime);
-		}
 		
 		if (gameLogic != null) gameLogic.update((float)elapsTime);
 
+		if (thiefController != null && !thiefController.isDone()) {
+			thiefController.update((float)elapsTime);
+		}
+
+		//logic for thief until we put it in GameLogic
+		if (thiefController != null && !thiefController.isDone()) {
+			thiefController.update((float)elapsTime);
+	
+			// show HUD prompt when the thief is in range
+			float d = player.getWorldLocation()
+							.distance(thief.getWorldLocation());
+			if (d < 5.0f) {
+				engine.getHUDmanager().setHUD1(
+					"Press F to catch thief",
+					new Vector3f(1f, 1f, 1f),
+					900, 700
+				);
+				engine.getHUDmanager().setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
+			} else {
+				// clear the prompt when you walk away
+				engine.getHUDmanager().setHUD1(
+					"",
+					new Vector3f(1f, 1f, 1f),
+					0, 0
+				);
+			}
+		}
 	}
 
 	@Override
@@ -551,11 +592,14 @@ public class game extends VariableFrameRateGame
 	if (e.getKeyCode() == KeyEvent.VK_F && gameLogic != null) {
 		float distToCust = player.getWorldLocation().distance(customer.getWorldLocation());
 		float distToOven = player.getWorldLocation().distance(oven1.getWorldLocation());
+		float distToThief = player.getWorldLocation().distance(thief.getWorldLocation());
 
 		if (distToCust < 5.0f) {
 			gameLogic.tryTakeOrder();
 		} else if (distToOven < 5.0f) {
 			gameLogic.tryStartCooking();
+		} else if (distToThief < 5.0f) {
+			thiefController.tryCatch();
 		}
 	}
 
