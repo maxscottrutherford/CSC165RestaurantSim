@@ -32,7 +32,7 @@ public class CustomerAIController {
             npc,
             new Vector3f(-6f, 1f, 5f), // table location
             0.5f,
-            5f
+            4f
         ));
         // 4) wait 5 seconds at the table
         tree.insert(0, new WaitDuration(5f));
