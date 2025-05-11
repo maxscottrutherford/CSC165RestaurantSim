@@ -523,8 +523,8 @@ public class game extends VariableFrameRateGame
 		outsideSound.play();
         currentAmbience = Ambience.OUTSIDE;
 		gameLogic = new GameLogic(player, customer, oven1, speaker, insideSound, inventory, engine);
-
-
+		Vector3f thiefExit = new Vector3f(thief.getWorldLocation());
+		thiefController = new ThiefBehaviorController(thief, cashRegister, thiefExit, player, cashManager);
 		
 	}
 
@@ -620,32 +620,31 @@ public class game extends VariableFrameRateGame
 		
 		if (gameLogic != null) gameLogic.update((float)elapsTime);
 
-		if (thiefController != null && !thiefController.isDone()) {
-			thiefController.update((float)elapsTime);
-		}
-
 		//logic for thief until we put it in GameLogic
-		if (thiefController != null && !thiefController.isDone()) {
+		// only show thief prompt when NOT ordering
+		if (!orderingActive
+			&& thiefController != null
+			&& !thiefController.isDone()) {
 			thiefController.update((float)elapsTime);
-	
-			// show HUD prompt when the thief is in range
-			float d = player.getWorldLocation()
-							.distance(thief.getWorldLocation());
-			if (d < 5.0f) {
+			float d = player.getWorldLocation().distance(thief.getWorldLocation());
+			if (d < 5f) {
 				engine.getHUDmanager().setHUD1(
 					"Press F to catch thief",
 					new Vector3f(1f, 1f, 1f),
 					900, 700
 				);
-				engine.getHUDmanager().setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
 			} else {
-				// clear the prompt when you walk away
 				engine.getHUDmanager().setHUD1(
 					"",
-					new Vector3f(1f, 1f, 1f),
+					new Vector3f(),
 					0, 0
 				);
 			}
+		}
+
+
+		if (thiefController != null && thiefController.isDone()) {
+			thiefController.update((float)elapsTime);
 		}
 
 		//Hud for Inventory Tracking
@@ -682,6 +681,7 @@ public class game extends VariableFrameRateGame
 				isExitMenuScheduled = false;
 			}
 		}
+		
 		// Money HUD
 		GLCanvas canvas = engine.getRenderSystem().getGLCanvas();
 		int canvasWidth = canvas.getWidth();
