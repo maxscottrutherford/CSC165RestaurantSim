@@ -338,10 +338,42 @@ public class game extends VariableFrameRateGame
 	@Override
 	public void initializeLights()
 	{
-		Light.setGlobalAmbient(0.5f, 0.5f, 0.5f);
-		light1 = new Light();
-		light1.setLocation(new Vector3f(5.0f, 4.0f, 2.0f));
-		engine.getSceneGraph().addLight(light1);
+		Light.setGlobalAmbient(0.1f, 0.06f, 0.05f);
+		// light1 = new Light();
+		// light1.setLocation(new Vector3f(5.0f, 4.0f, 2.0f));
+		// engine.getSceneGraph().addLight(light1);
+
+		//ceiling lights, 
+		//ceiling 1 is kitchen light, 
+		//ceiling 2 is dining area light
+		Light ceiling1 = new Light(); //kitchen light
+		ceiling1.setType(Light.LightType.POSITIONAL);
+		ceiling1.setAmbient(0.2f, 0.15f, 0.1f);
+		ceiling1.setDiffuse(4.5f, 3.5f, 3.5f);  
+		ceiling1.setSpecular(0.8f, 0.9f, 0.6f);                 
+		ceiling1.setLocation(new Vector3f(10f, 10.5f, 2f)); 
+		// ceiling1.setDirection(new Vector3f(0f, -1f, 0f));        
+		// ceiling1.setCutoffAngle(35.0f);                           
+		// ceiling1.setOffAxisExponent(2.0f);
+		ceiling1.setConstantAttenuation(1.0f);
+		ceiling1.setLinearAttenuation(0.1f);
+		ceiling1.setQuadraticAttenuation(0.05f);
+
+		Light ceiling2 = new Light(); //dining area light
+		ceiling2.setType(Light.LightType.POSITIONAL);
+		ceiling2.setAmbient(0.2f, 0.15f, 0.1f);
+		ceiling2.setDiffuse(3.0f, 2f, 2f); 
+		ceiling2.setSpecular(0.8f, 0.9f, 0.6f); 
+		ceiling2.setLocation(new Vector3f(-10f, 10.5f, 2f));
+		// ceiling2.setDirection(new Vector3f(-5f, -1f, 0f));
+		// ceiling2.setCutoffAngle(35.0f);
+		// ceiling2.setOffAxisExponent(2.0f);
+		ceiling2.setConstantAttenuation(1.0f);
+		ceiling2.setLinearAttenuation(0.1f);
+		ceiling2.setQuadraticAttenuation(0.05f);
+
+		engine.getSceneGraph().addLight(ceiling1);
+		engine.getSceneGraph().addLight(ceiling2);
 	}
 
 	private void setupNetworking() {
