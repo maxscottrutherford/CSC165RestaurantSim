@@ -124,6 +124,7 @@ public class game extends VariableFrameRateGame
 	private int[] menuPrices = {5, 4, 3, 2};
 	private long exitMenuStartTime = 0;
 	private boolean isExitMenuScheduled = false;
+	Light pclight = new Light(); 
 
 	
  
@@ -295,7 +296,7 @@ public class game extends VariableFrameRateGame
 		pantryShelf1.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
 
 		cashRegister = new GameObject(GameObject.root(), cashRegisterS, cashRegisterTx);
-		cashRegister.setLocalTranslation(new Matrix4f().translation(1, 1.5f, 0.5f));
+		cashRegister.setLocalTranslation(new Matrix4f().translation(1, 2.3f, 0.5f));
 		cashRegister.setLocalScale(new Matrix4f().scaling(2.5f));
 		cashRegister.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
 
@@ -357,6 +358,7 @@ public class game extends VariableFrameRateGame
 		// set tiling for terrain texture
 		terrain.getRenderStates().setTiling(1);
 		terrain.getRenderStates().setTileFactor(100);
+		
 
 		float[] tmp = new float[16];
 		Matrix4f groundMat = new Matrix4f().translation(0f, 0f, 0f); // y=0
@@ -373,7 +375,7 @@ public class game extends VariableFrameRateGame
 	public void initializeLights()
 	{
 		Light.setGlobalAmbient(0.1f, 0.06f, 0.05f);
-
+		
 		//ceiling lights, 
 		//ceiling 1 is kitchen light, 
 		//ceiling 2 is dining area light
@@ -432,6 +434,8 @@ public class game extends VariableFrameRateGame
 		engine.getSceneGraph().addLight(ceiling1);
 		engine.getSceneGraph().addLight(ceiling2);
 		engine.getSceneGraph().addLight(spotlight1);
+		engine.getSceneGraph().addLight(doorLight);
+		
 	}
 
 	private void setupNetworking() {
@@ -740,6 +744,18 @@ public class game extends VariableFrameRateGame
 
 		zoomedToPC = true;
 		pc.setTextureImage(pc1Tx);
+
+		Light pclight = new Light(); 
+		pclight.setType(Light.LightType.POSITIONAL);
+		pclight.setAmbient(0.2f, 0.15f, 0.1f);
+		pclight.setDiffuse(3.0f, 2f, 2f); 
+		pclight.setSpecular(0.8f, 0.9f, 0.6f); 
+		pclight.setLocation(new Vector3f(2, 3.3f, -5f));
+		pclight.setConstantAttenuation(1.0f);
+		pclight.setLinearAttenuation(0.1f);
+		pclight.setQuadraticAttenuation(0.05f);
+		engine.getSceneGraph().addLight(pclight);
+		pclight.enable();
 }
 
 
@@ -759,6 +775,7 @@ public class game extends VariableFrameRateGame
 		cam.setN(savedCamN);
 
 		pc.setTextureImage(pcTx);
+		pclight.disable();
 }
 
 
