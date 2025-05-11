@@ -99,7 +99,8 @@ public class game extends VariableFrameRateGame
 
 	//Gameobjects
 	private GameObject terrain, oven, restaurant, bacon, bellPepper, cashRegister, cashRegister1, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,pantryShelf1,
-	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table,table1, thief, waLL, oven1, speaker, car, pc, light, light1, light2;
+	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table,table1, thief, waLL, oven1, speaker, car, pc, light, light1, light2 ;
+;
 
 	//Gameobject shapes
 	private ObjShape terrainS, baconS,ovenS, restaurantS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
@@ -131,6 +132,7 @@ public class game extends VariableFrameRateGame
 	private int[] menuPrices = {5, 4, 3, 2};
 	private long exitMenuStartTime = 0;
 	private boolean isExitMenuScheduled = false;
+	private boolean mainMenuActive = true;
 	Light pclight = new Light(); 
 
 	
@@ -240,6 +242,12 @@ public class game extends VariableFrameRateGame
 	{
 		Matrix4f scale = new Matrix4f().scaling(1f);
 		Matrix4f playerScale = new Matrix4f().scaling(1.8f);
+
+		menuBG = new GameObject(GameObject.root(), oven1S, oven1tx);
+		menuBG.setLocalTranslation(new Matrix4f().translation(0f, 0f, -5f));
+		menuBG.setLocalScale(new Matrix4f().scaling(100f)); // wide & flat
+		menuBG.getRenderStates().setHasSolidColor(true);
+		menuBG.getRenderStates().setColor(new Vector3f(0f, 0f, 0f)); // black
 
 		player = new GameObject(GameObject.root(), playerS, playerTx);
 		player.setLocalTranslation(new Matrix4f().translation(-46, 1, -16));
@@ -564,6 +572,34 @@ public class game extends VariableFrameRateGame
 		customerController = new CustomerBehaviorController(customer, cashRegister, chair, player);
 		gameLogic = new GameLogic(player, customer, oven1, speaker, insideSound, inventory,
 		 engine, pizzaS, pizzaTx, customerController);
+		 if (mainMenuActive) {
+				int screenWidth = engine.getRenderSystem().getGLCanvas().getWidth();
+		int screenHeight = engine.getRenderSystem().getGLCanvas().getHeight();
+
+		int centerX = screenWidth / 2;
+		int titleY = screenHeight / 2 + 50;
+		int bottomY = 100;
+
+		// Title text - golden
+		engine.getHUDmanager().setHUD1(
+			"Restaurant Simulator by Max and Sam",
+			new Vector3f(1f, 0.85f, 0.3f), // golden
+			centerX - 200, titleY
+		);
+
+		// Subtitle - cyan
+		engine.getHUDmanager().setHUD2(
+			"Press Enter to Continue",
+			new Vector3f(0.7f, 0.9f, 1f), // light blue
+			centerX - 130, bottomY
+		);
+
+	
+		engine.getHUDmanager().setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
+		engine.getHUDmanager().setHUD2font(GLUT.BITMAP_TIMES_ROMAN_24);
+
+
+}
 	}
 
 	public void showTimedMessage(String message, Vector3f color) {
@@ -605,7 +641,7 @@ public class game extends VariableFrameRateGame
 
 	@Override
 	public void update() {
-		
+		if (mainMenuActive) return;  // skip game update logic
 		System.out.println(player.getWorldLocation().x() + " " + player.getWorldLocation().y() + " " + player.getWorldLocation().z());
 		Vector3f loc, fwd, up, right;
 		lastFrameTime = currFrameTime;
@@ -859,39 +895,17 @@ public class game extends VariableFrameRateGame
 
 	@Override
 	public void keyPressed(KeyEvent e) {
+		
+		if (mainMenuActive && e.getKeyCode() == KeyEvent.VK_ENTER) {
+			mainMenuActive = false;
+			engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
+			engine.getHUDmanager().setHUD2("", new Vector3f(), 0, 0);
+			
+			// Remove background cube
+			engine.getSceneGraph().removeGameObject(menuBG);
+			menuBG = null;
 
-    // MAIN MENU LOGIC
-    if (menuActive && e.getKeyCode() == KeyEvent.VK_ENTER) {
-        engine.getSceneGraph().removeGameObject(menuBG);
-        menuBG = null;
-        menuActive = false;
-
-        // Clear HUD
-        engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
-        engine.getHUDmanager().setHUD2("", new Vector3f(), 0, 0);
-        engine.getHUDmanager().setHUD3("", new Vector3f(), 0, 0);
-        engine.enableGraphicsWorldRender();
-        engine.enablePhysicsWorldRender();
-        return;
-    }
-
-		//This is bugged, it causes the hud to disappear
-		// OVEN VIEWPORT TOGGLE (L KEY)
-		if (e.getKeyCode() == KeyEvent.VK_L) {
-			hudViewportVisible = !hudViewportVisible;
-
-			if (hudViewportVisible) {
-				hudViewport = engine.getRenderSystem().addViewport("HUD", 0.25f, 0.2f, 0.5f, 0.5f);
-				hudViewport.setHasBorder(true);
-				hudViewport.setBorderColor(1f, 1f, 1f);
-				hudViewport.setBorderWidth(2);
-
-				Camera hudCam = hudViewport.getCamera();
-				hudCam.setLocation(new Vector3f(0f, 13f, -10000f));
-				hudCam.lookAt(oven);
-			} else {
-				hudViewport = engine.getRenderSystem().addViewport("HUD", 0.0f, 0.0f, 0.0f, 0.0f);
-			}
+			return;
 		}
 
 		// INTERACTIONS (F KEY)
