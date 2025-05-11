@@ -31,11 +31,14 @@ public class GameLogic {
 
 
     private GameObject player, customer, oven1;
+    private CustomerBehaviorController customerCtrl;
     private HUDmanager  hud;
     private boolean     pizzaStarted   = false;
     private boolean     pizzaReady     = false;
     private long        cookingStart   = 0;
     private boolean     pizzaPrompt    = false;
+    private boolean takePromptVisible  = false;
+    private boolean servePromptVisible = false;
 
     private boolean     orderTaken          = false;
     private boolean     orderPromptVisible  = false;
@@ -44,7 +47,8 @@ public class GameLogic {
 
     public GameLogic(GameObject player, GameObject customer, GameObject oven1,
                  GameObject speaker, Sound insideSound, InventoryManager inventory,
-                 Engine engine, ObjShape pizzaS, TextureImage pizzaTx) {
+                 Engine engine, ObjShape pizzaS, TextureImage pizzaTx, 
+                 CustomerBehaviorController customerCtrl) {
         this.player = player;
         this.customer = customer;
         this.oven1 = oven1;
@@ -55,8 +59,9 @@ public class GameLogic {
         this.pizzaS = pizzaS;
         this.pizzaTx = pizzaTx;
         this.engine = engine;
-
+        this.customerCtrl = customerCtrl;
     }
+
     public void tryToggleMusic() {
         float d = player.getWorldLocation().distance(speaker.getWorldLocation());
         
@@ -76,7 +81,8 @@ public class GameLogic {
     /** Called every frame from game.update(elapsTime) */
     public void update(float elapsedMillis) {
         handlePizzaLogic();
-        handleOrderPrompt();
+        customerCtrl.update(elapsedMillis);
+        handleCustomerPrompt();
         handleMusicPrompt();
 
 
@@ -147,6 +153,32 @@ public class GameLogic {
             orderPromptVisible = false;
         }
     }
+
+    private void handleCustomerPrompt() {
+        float d = player.getWorldLocation()
+                        .distance(customer.getWorldLocation());
+
+        // decide what text to show
+        String text = "";
+        if (customerCtrl.isWaitingForOrder() && d < INTERACT_DIST) {
+            text = "Press F to take order";
+        }
+        else if (customerCtrl.isWaitingForServe() && d < INTERACT_DIST) {
+            text = "Press F to serve pizza";
+        }
+
+        // pick color/coords
+        Vector3f col = text.isEmpty()
+                    ? new Vector3f() 
+                    : new Vector3f(1f,1f,1f);
+        int x = text.isEmpty() ? 0 : 900;
+        int y = text.isEmpty() ? 0 : 700;
+
+        // draw it (or clear if text=="")
+        hud.setHUD4(text, col, x, y);
+        hud.setHUD4font(GLUT.BITMAP_TIMES_ROMAN_24);
+    }
+
 
     private void handlePizzaLogic() {
         float d = player.getWorldLocation().distance(oven1.getWorldLocation());
