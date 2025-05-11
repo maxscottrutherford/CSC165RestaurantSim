@@ -64,6 +64,8 @@ public class game extends VariableFrameRateGame
 	private long hudMessageStartTime = 0;
 	private final long hudMessageDuration = 3000; // 3 seconds
 	private boolean showTimedHUDMessage = false;
+	private boolean zoomedToPC = false;
+
 
 	
 	
@@ -97,15 +99,15 @@ public class game extends VariableFrameRateGame
 
 	//Gameobjects
 	private GameObject terrain, oven, restaurant, bacon, bellPepper, cashRegister, cashRegister1, ceiling, chair, counter, customer, cuttingBoard, floor, knife, mushroom, pantryShelf, pepperoni,pantryShelf1,
-	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table,table1, thief, waLL, oven1, speaker, car, pc;
+	pizza, player, poster, posterWide, saucecan, signBoard, sodaCup, sodaMachine, table,table1, thief, waLL, oven1, speaker, car, pc, light, light1, light2;
 
 	//Gameobject shapes
 	private ObjShape terrainS, baconS,ovenS, restaurantS, bellPepperS, cashRegisterS, ceilingS, chairS, counterS, customerS, cuttingBoardS, floorS, knifeS, mushroomS, pantryShelfS, pepperoniS,
-	pizzaS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, oven1S, waLLS, speakerS, carS, pcS;
+	pizzaS, posterS, posterWideS, saucecanS, signBoardS, sodaCupS, sodaMachineS, tableS, oven1S, waLLS, speakerS, carS, pcS, lightS;
 
 	//Gameobject textures
 	private TextureImage terrainTx, hills, ovenTx, baconTx, restaurantTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
-	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, thiefTx, oven1tx, waLLTx, speakerTx, carTx, pcTx;
+	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, thiefTx, oven1tx, waLLTx, speakerTx, carTx, pcTx, pc1Tx, lightTx;
 
 	private double lastFrameTime, currFrameTime, elapsTime;
 	private int sunsetSkybox; // skyboxes
@@ -178,6 +180,7 @@ public class game extends VariableFrameRateGame
 		oven1S = new ImportedModel("oven.obj");
 		speakerS = new ImportedModel("speaker.obj");
 		pcS = new ImportedModel("pc.obj");
+		lightS = new ImportedModel("light.obj");
 
 		
 	}
@@ -200,7 +203,7 @@ public class game extends VariableFrameRateGame
 		mushroomTx = new TextureImage("mushroom.png");
 		pantryShelfTx = new TextureImage("pantryShelf.png");
 		pepperoniTx = new TextureImage("pepperoni.png");
-		pizzaTx = new TextureImage("peppPizza.png");
+		pizzaTx = new TextureImage("pizzaC.png");
 		playerTx = new TextureImage("player.png");
 		posterTx = new TextureImage("poster.png");
 		posterWideTx = new TextureImage("posterWide.png");
@@ -218,6 +221,8 @@ public class game extends VariableFrameRateGame
 		oven1tx = new TextureImage("oven.png");
 		speakerTx = new TextureImage("speaker.png");
 		pcTx = new TextureImage("pc.png");
+		pc1Tx = new TextureImage("pc1.png");
+		lightTx = new TextureImage("light.png");
 		//load the textures for the game objects
 	}
 
@@ -330,6 +335,24 @@ public class game extends VariableFrameRateGame
 		pc.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
 		pc.setLocalScale(new Matrix4f().scaling(1f));
 
+		//outside light
+		light = new GameObject(GameObject.root(), lightS, lightTx);
+		light.setLocalTranslation(new Matrix4f().translation(-21.8f, 9.2f, 0.6f));
+		light.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+		light.setLocalScale(new Matrix4f().scaling(2f));
+
+		//dining area light
+		light1 = new GameObject(GameObject.root(), lightS, lightTx);
+		light1.setLocalTranslation(new Matrix4f().translation(-10f, 9.5f, 2f));
+		light1.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+		light1.setLocalScale(new Matrix4f().scaling(2f));
+
+		//kitchen area light
+		light2 = new GameObject(GameObject.root(), lightS, lightTx);
+		light2.setLocalTranslation(new Matrix4f().translation(10f, 9.5f, 2f));
+		light2.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+		light2.setLocalScale(new Matrix4f().scaling(2f));
+
 		// build terrain object
 		terrain = new GameObject(GameObject.root(), terrainS);
 		terrain.setLocalTranslation(new Matrix4f().translation(0f,0f,0f));
@@ -366,7 +389,7 @@ public class game extends VariableFrameRateGame
 		ceiling1.setAmbient(0.2f, 0.15f, 0.1f);
 		ceiling1.setDiffuse(4.5f, 3.5f, 3.5f);  
 		ceiling1.setSpecular(0.8f, 0.9f, 0.6f);                 
-		ceiling1.setLocation(new Vector3f(10f, 10.5f, 2f)); 
+		ceiling1.setLocation(new Vector3f(10f, 9f, 2f)); 
 		ceiling1.setConstantAttenuation(1.0f);
 		ceiling1.setLinearAttenuation(0.1f);
 		ceiling1.setQuadraticAttenuation(0.05f);
@@ -376,7 +399,7 @@ public class game extends VariableFrameRateGame
 		ceiling2.setAmbient(0.2f, 0.15f, 0.1f);
 		ceiling2.setDiffuse(3.0f, 2f, 2f); 
 		ceiling2.setSpecular(0.8f, 0.9f, 0.6f); 
-		ceiling2.setLocation(new Vector3f(-10f, 10.5f, 2f));
+		ceiling2.setLocation(new Vector3f(-10f, 9f, 2f));
 		ceiling2.setConstantAttenuation(1.0f);
 		ceiling2.setLinearAttenuation(0.1f);
 		ceiling2.setQuadraticAttenuation(0.05f);
@@ -393,23 +416,25 @@ public class game extends VariableFrameRateGame
 		doorLight.setQuadraticAttenuation(0.01f);
 		engine.getSceneGraph().addLight(doorLight);
 
-		//spotlight loc: -21, height, 22
-		Light spotlight1 = new Light(); //spotlight light for sign
+		Light spotlight1 = new Light();
 		spotlight1.setType(Light.LightType.SPOTLIGHT);
-		spotlight1.setAmbient(0.2f, 0.15f, 0.1f);            
-		spotlight1.setDiffuse(2f, 2f, 2f);                    
-		spotlight1.setSpecular(1.5f, 1.5f, 1.5f);                   
+		spotlight1.setAmbient(0.2f, 0.15f, 0.1f);
+		spotlight1.setDiffuse(3f, 3f, 3f);
+		spotlight1.setSpecular(2f, 2f, 2f);
 
-		Vector3f lightPos = new Vector3f(-21f, 10f, 22f);
+		Vector3f lightPos = new Vector3f(-21f, 7f, 22f);
 		spotlight1.setLocation(lightPos);
 		spotlight1.setDirection(new Vector3f(0f, 1f, 0f));
 
-		spotlight1.setCutoffAngle(45.0f);           
-		spotlight1.setOffAxisExponent(1.0f);     
+		spotlight1.setCutoffAngle(60.0f);
+		spotlight1.setOffAxisExponent(0.2f);
 
-		spotlight1.setConstantAttenuation(4.0f);
+		spotlight1.setConstantAttenuation(1.0f);
 		spotlight1.setLinearAttenuation(0.01f);
-		spotlight1.setQuadraticAttenuation(0.0f); 
+		spotlight1.setQuadraticAttenuation(0.005f);
+
+		engine.getSceneGraph().addLight(spotlight1);
+
 
 		engine.getSceneGraph().addLight(ceiling1);
 		engine.getSceneGraph().addLight(ceiling2);
@@ -529,9 +554,8 @@ public class game extends VariableFrameRateGame
 		outsideSound.stop();
 		outsideSound.play();
         currentAmbience = Ambience.OUTSIDE;
+		gameLogic = new GameLogic(player, customer, oven1, speaker, insideSound, inventory, engine, pizzaS, pizzaTx);
 
-		//Game & AI Logic
-		gameLogic = new GameLogic(player, customer, oven1, speaker, insideSound, inventory, engine);
 		Vector3f thiefExit = new Vector3f(thief.getWorldLocation());
 		thiefController = new ThiefBehaviorController(thief, cashRegister, thiefExit, player, cashManager);
 		customerController = new CustomerBehaviorController(customer, cashRegister, chair, player);
@@ -593,10 +617,13 @@ public class game extends VariableFrameRateGame
 		up = player.getWorldUpVector();
 		right = player.getWorldRightVector();
 
+		if (!zoomedToPC) {
 		cam.setU(right);
 		cam.setV(up);
 		cam.setN(fwd);
 		cam.setLocation(loc.add(up.mul(6f)).add(fwd.mul(-10.0f)));
+	}
+
 
 		footstepSound.setLocation(player.getWorldLocation());
 		processNetworking(elapsTime);
@@ -714,25 +741,30 @@ public class game extends VariableFrameRateGame
 
 	}
 
-
 	private void zoomCamToPC() {
-    Camera cam = engine.getRenderSystem().getViewport("MAIN").getCamera();
+		Camera cam = engine.getRenderSystem().getViewport("MAIN").getCamera();
 
-    savedCamPos = cam.getLocation();
-    savedCamU = cam.getU();
-    savedCamV = cam.getV();
-    savedCamN = cam.getN();
+		savedCamPos = cam.getLocation();
+		savedCamU = cam.getU();
+		savedCamV = cam.getV();
+		savedCamN = cam.getN();
 
-    Vector3f pcLoc = pc.getWorldLocation();
-    Vector3f offset = new Vector3f(0f, 2f, 4f);
-    Vector3f newCamPos = new Vector3f(pcLoc).add(offset);
+		Vector3f pcLoc = pc.getWorldLocation();
+		Vector3f offset = new Vector3f(3.2f, 1.8f, 1.4f); 
+		Vector3f newCamPos = new Vector3f(pcLoc).add(offset);
 
-    cam.setLocation(newCamPos);
-    cam.lookAt(pcLoc);
+		cam.setLocation(newCamPos);
+		cam.lookAt(pcLoc);
+
+		zoomedToPC = true;
+		pc.setTextureImage(pc1Tx);
 }
+
+
 
 	private void exitOrderMode() {
 		orderingActive = false;
+		zoomedToPC = false; 
 
 		engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
 		engine.getHUDmanager().setHUD2("", new Vector3f(), 0, 0);
@@ -743,7 +775,10 @@ public class game extends VariableFrameRateGame
 		cam.setU(savedCamU);
 		cam.setV(savedCamV);
 		cam.setN(savedCamN);
-	}
+
+		pc.setTextureImage(pcTx);
+}
+
 
 	private void showOrderMenu() {
 		orderingActive = true;
