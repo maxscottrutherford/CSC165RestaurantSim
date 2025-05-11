@@ -190,15 +190,14 @@ public class GameLogic {
         if (pizzaStarted && !pizzaReady) {
             long elapsed = System.currentTimeMillis() - cookingStart;
              if (elapsed >= 5_000) {
-        // existing HUD updates...
         pizzaReady = true;
         pizzaStarted = false;
         pizzaPrompt = false;
 
-        // 🎯 Create pizza GameObject and attach to player hand
+     
         GameObject pizzaInHand = new GameObject(player, pizzaS, pizzaTx);
         pizzaInHand.setLocalTranslation(new Matrix4f().translation(0.5f, 3.5f, 0.8f)); // offset in hand
-        pizzaInHand.setLocalScale(new Matrix4f().scaling(0.8f)); 
+        pizzaInHand.setLocalScale(new Matrix4f().scaling(0.5f)); 
         pizzaInHand.propagateTranslation(true);
         pizzaInHand.propagateRotation(true);
         pizzaInHand.applyParentRotationToPosition(true);
