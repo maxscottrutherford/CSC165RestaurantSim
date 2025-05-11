@@ -629,7 +629,7 @@ public class game extends VariableFrameRateGame
 		cam.setLocation(loc.add(up.mul(6f)).add(fwd.mul(-10.0f)));
 	}
 
-
+		
 		footstepSound.setLocation(player.getWorldLocation());
 		processNetworking(elapsTime);
 

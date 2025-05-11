@@ -28,6 +28,7 @@ public class GameLogic {
     private ObjShape pizzaS;
     private TextureImage pizzaTx;
     private Engine engine;
+    private GameObject pizzaInHand = null;
 
 
     private GameObject player, customer, oven1;
@@ -84,6 +85,7 @@ public class GameLogic {
         customerCtrl.update(elapsedMillis);
         handleCustomerPrompt();
         handleMusicPrompt();
+        handleOrderPrompt();
 
 
         // drive the customer once order is taken
@@ -118,38 +120,36 @@ public class GameLogic {
             List<String> required = List.of("cheese", "sauce");
 
             if (!inventory.hasIngredients(required)) {
-                hud.setHUD5("Missing ingredients!", new Vector3f(1, 0, 0), 900, 700);
-                hud.setHUD5font(GLUT.BITMAP_TIMES_ROMAN_24);
+                hud.setHUD7("Missing ingredients!", new Vector3f(1, 0, 0), 900, 700);
+                hud.setHUD7font(GLUT.BITMAP_TIMES_ROMAN_24);
                 return;
             }
 
-            // Consume ingredients and start cooking
             inventory.useIngredients(required);
             pizzaStarted = true;
             cookingStart = System.currentTimeMillis();
 
-            hud.setHUD5("Cooking Pizza...", new Vector3f(1,1,1), 900, 700);
-            hud.setHUD5font(GLUT.BITMAP_TIMES_ROMAN_24);
+            hud.setHUD7("Cooking Pizza...", new Vector3f(1,1,1), 900, 700);
+            hud.setHUD6font(GLUT.BITMAP_TIMES_ROMAN_24);
             pizzaPrompt = false;
         }
     }
 
 
 
-    // ----------------------------
-    // internal helpers
+ 
     private void handleOrderPrompt() {
         if (orderTaken) return;
 
         float d = player.getWorldLocation().distance(customer.getWorldLocation());
         if (d < INTERACT_DIST && !orderPromptVisible) {
-            hud.setHUD5("Press F to take order",
+            hud.setHUD8("Press F to take order",
                         new Vector3f(1,1,1), 900, 700);
-            hud.setHUD5font(GLUT.BITMAP_TIMES_ROMAN_24);
+            hud.setHUD8font(GLUT.BITMAP_TIMES_ROMAN_24);
             orderPromptVisible = true;
         }
         else if (d >= INTERACT_DIST && orderPromptVisible) {
-            hud.setHUD5("", new Vector3f(1,1,1), 0, 0);
+            hud.setHUD8("", new Vector3f(1,1,1), 0, 0);
             orderPromptVisible = false;
         }
     }
@@ -165,6 +165,11 @@ public class GameLogic {
         }
         else if (customerCtrl.isWaitingForServe() && d < INTERACT_DIST) {
             text = "Press F to serve pizza";
+            if (pizzaInHand != null) {
+            engine.getSceneGraph().removeGameObject(pizzaInHand);
+            pizzaInHand = null;
+            
+}
         }
 
         // pick color/coords
@@ -174,9 +179,8 @@ public class GameLogic {
         int x = text.isEmpty() ? 0 : 900;
         int y = text.isEmpty() ? 0 : 700;
 
-        // draw it (or clear if text=="")
-        hud.setHUD4(text, col, x, y);
-        hud.setHUD4font(GLUT.BITMAP_TIMES_ROMAN_24);
+        hud.setHUD8(text, col, x, y);
+        hud.setHUD8font(GLUT.BITMAP_TIMES_ROMAN_24);
     }
 
 
@@ -184,13 +188,13 @@ public class GameLogic {
         float d = player.getWorldLocation().distance(oven1.getWorldLocation());
 
         if (!pizzaStarted && d < INTERACT_DIST && !pizzaPrompt) {
-            hud.setHUD5("Press F to bake pizza",
+            hud.setHUD7("Press F to bake pizza",
                         new Vector3f(1,1,1), 900, 700);
             hud.setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
             pizzaPrompt = true;
         }
         else if (!pizzaStarted && d >= INTERACT_DIST && pizzaPrompt) {
-            hud.setHUD5("", new Vector3f(1,1,1), 0, 0);
+            hud.setHUD7("", new Vector3f(1,1,1), 0, 0);
             pizzaPrompt = false;
         }
 
@@ -202,7 +206,7 @@ public class GameLogic {
         pizzaPrompt = false;
 
      
-        GameObject pizzaInHand = new GameObject(player, pizzaS, pizzaTx);
+        pizzaInHand = new GameObject(player, pizzaS, pizzaTx);
         pizzaInHand.setLocalTranslation(new Matrix4f().translation(0.5f, 3.5f, 0.8f)); // offset in hand
         pizzaInHand.setLocalScale(new Matrix4f().scaling(0.5f)); 
         pizzaInHand.propagateTranslation(true);
@@ -213,7 +217,7 @@ public class GameLogic {
         }
 
         if (pizzaReady && System.currentTimeMillis() - pizzaReadyTime > 3000) {
-            hud.setHUD5("", new Vector3f(), 0, 0);
+            hud.setHUD7("", new Vector3f(), 0, 0);
             pizzaReady = false;
         }
         
