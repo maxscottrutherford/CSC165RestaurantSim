@@ -123,8 +123,8 @@ public class GameLogic {
             List<String> required = List.of("cheese", "sauce");
 
             if (!inventory.hasIngredients(required)) {
-                hud.setHUD1("Missing ingredients!", new Vector3f(1, 0, 0), 900, 700);
-                hud.setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
+                hud.setHUD5("Missing ingredients!", new Vector3f(1, 0, 0), 900, 700);
+                hud.setHUD5font(GLUT.BITMAP_TIMES_ROMAN_24);
                 return;
             }
 
@@ -133,8 +133,8 @@ public class GameLogic {
             pizzaStarted = true;
             cookingStart = System.currentTimeMillis();
 
-            hud.setHUD1("Cooking Pizza...", new Vector3f(1,1,1), 900, 700);
-            hud.setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
+            hud.setHUD5("Cooking Pizza...", new Vector3f(1,1,1), 900, 700);
+            hud.setHUD5font(GLUT.BITMAP_TIMES_ROMAN_24);
             pizzaPrompt = false;
         }
     }
@@ -148,13 +148,13 @@ public class GameLogic {
 
         float d = player.getWorldLocation().distance(customer.getWorldLocation());
         if (d < INTERACT_DIST && !orderPromptVisible) {
-            hud.setHUD1("Press F to take order",
+            hud.setHUD5("Press F to take order",
                         new Vector3f(1,1,1), 900, 700);
-            hud.setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
+            hud.setHUD5font(GLUT.BITMAP_TIMES_ROMAN_24);
             orderPromptVisible = true;
         }
         else if (d >= INTERACT_DIST && orderPromptVisible) {
-            hud.setHUD1("", new Vector3f(1,1,1), 0, 0);
+            hud.setHUD5("", new Vector3f(1,1,1), 0, 0);
             orderPromptVisible = false;
         }
     }
@@ -163,20 +163,20 @@ public class GameLogic {
         float d = player.getWorldLocation().distance(oven1.getWorldLocation());
 
         if (!pizzaStarted && d < INTERACT_DIST && !pizzaPrompt) {
-            hud.setHUD1("Press F to bake pizza",
+            hud.setHUD5("Press F to bake pizza",
                         new Vector3f(1,1,1), 900, 700);
             hud.setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
             pizzaPrompt = true;
         }
         else if (!pizzaStarted && d >= INTERACT_DIST && pizzaPrompt) {
-            hud.setHUD1("", new Vector3f(1,1,1), 0, 0);
+            hud.setHUD5("", new Vector3f(1,1,1), 0, 0);
             pizzaPrompt = false;
         }
 
         if (pizzaStarted && !pizzaReady) {
             long elapsed = System.currentTimeMillis() - cookingStart;
             if (elapsed >= 5_000) {
-                hud.setHUD1("Pizza is Ready!", new Vector3f(0,1,0), 900, 700);
+                hud.setHUD5("Pizza is Ready!", new Vector3f(0,1,0), 900, 700);
                 hud.setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
                 pizzaReady = true;
         
@@ -187,7 +187,7 @@ public class GameLogic {
         }
 
         if (pizzaReady && System.currentTimeMillis() - pizzaReadyTime > 3000) {
-            hud.setHUD1("", new Vector3f(), 0, 0);
+            hud.setHUD5("", new Vector3f(), 0, 0);
             pizzaReady = false;
         }
         
