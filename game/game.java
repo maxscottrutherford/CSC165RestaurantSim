@@ -16,6 +16,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.joml.*;
 import org.joml.Math;
@@ -35,7 +36,13 @@ public class game extends VariableFrameRateGame
 
 	//AI Controller
 	private ThiefBehaviorController thiefController;
+	private CustomerBehaviorController customerController;
 	private GameLogic gameLogic;
+
+	//Customer Order Values
+	private String currentOrder = null;
+	private long currentOrderStart = 0L;
+	private static final long ORDER_DISPLAY_MS = 1000L;
 
 	//Score/CashManager
 	private CashManager cashManager;
@@ -551,11 +558,12 @@ public class game extends VariableFrameRateGame
 		outsideSound.stop();
 		outsideSound.play();
         currentAmbience = Ambience.OUTSIDE;
-		gameLogic = new GameLogic(player, customer, oven1, speaker, insideSound, inventory, engine, pizzaS, pizzaTx);
-
+		
 		Vector3f thiefExit = new Vector3f(thief.getWorldLocation());
 		thiefController = new ThiefBehaviorController(thief, cashRegister, thiefExit, player, cashManager);
-		
+		customerController = new CustomerBehaviorController(customer, cashRegister, chair, player);
+		gameLogic = new GameLogic(player, customer, oven1, speaker, insideSound, inventory,
+		 engine, pizzaS, pizzaTx, customerController);
 	}
 
 	public void showTimedMessage(String message, Vector3f color) {
@@ -653,6 +661,17 @@ public class game extends VariableFrameRateGame
 		
 		if (gameLogic != null) gameLogic.update((float)elapsTime);
 
+		if (customerController != null && !customerController.isDone()) {
+			customerController.update((float)elapsTime);
+		}
+
+		if (currentOrder != null) {
+			if (System.currentTimeMillis() - currentOrderStart > ORDER_DISPLAY_MS) {
+				engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
+				currentOrder = null;
+			}
+		}
+
 		//logic for thief until we put it in GameLogic
 		// only show thief prompt when NOT ordering
 		if (!orderingActive
@@ -661,13 +680,13 @@ public class game extends VariableFrameRateGame
 			thiefController.update((float)elapsTime);
 			float d = player.getWorldLocation().distance(thief.getWorldLocation());
 			if (d < 5f) {
-				engine.getHUDmanager().setHUD1(
+				engine.getHUDmanager().setHUD5(
 					"Press F to catch thief",
 					new Vector3f(1f, 1f, 1f),
 					900, 700
 				);
 			} else {
-				engine.getHUDmanager().setHUD1(
+				engine.getHUDmanager().setHUD5(
 					"",
 					new Vector3f(),
 					0, 0
@@ -877,21 +896,41 @@ public class game extends VariableFrameRateGame
 
 		// INTERACTIONS (F KEY)
 		if (e.getKeyCode() == KeyEvent.VK_F && gameLogic != null) {
-			float distToCust = player.getWorldLocation().distance(customer.getWorldLocation());
-			float distToOven = player.getWorldLocation().distance(oven1.getWorldLocation());
+			float distToCust    = player.getWorldLocation().distance(customer.getWorldLocation());
+			float distToOven    = player.getWorldLocation().distance(oven1.getWorldLocation());
+			float distToThief   = player.getWorldLocation().distance(thief.getWorldLocation());
 			float distToSpeaker = player.getWorldLocation().distance(speaker.getWorldLocation());
-			float distToThief = player.getWorldLocation().distance(thief.getWorldLocation());
 
-			if (distToCust < 5.0f) {
-				gameLogic.tryTakeOrder();
-			} else if (distToOven < 5.0f) {
+			// 1) Take order if they’re waiting at the counter
+			if (distToCust < 5f && customerController.isWaitingForOrder()) {
+				engine.getHUDmanager().setHUD1("Order received", new Vector3f(1,1,1), 400,50);
+				engine.getHUDmanager().setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
+
+				customerController.tryTakeOrder();
+			}
+			// 2) Serve pizza if they’ve returned
+			else if (distToCust < 5f && customerController.isWaitingForServe()) {
+				customerController.tryServeOrder();
+
+				if (customerController.isDone()) {
+					// award money here
+					cashManager.addIncome(10);
+					engine.getHUDmanager().setHUD1("Served pizza! +$10", new Vector3f(0,1,0), 400,50);
+					engine.getHUDmanager().setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
+				}
+			}
+			// 3) Oven, thief, speaker…
+			else if (distToOven < 5f) {
 				gameLogic.tryStartCooking();
-			} else if (distToThief < 5.0f) {
+			}
+			else if (distToThief < 5f) {
 				thiefController.tryCatch();
-			} else if (distToSpeaker < 5.0f) {
+			}
+			else if (distToSpeaker < 5f) {
 				gameLogic.tryToggleMusic();
 			}
 		}
+
 
 		// ORDERING SYSTEM START (O KEY)
 		if (e.getKeyCode() == KeyEvent.VK_O && nearPC && !orderingActive) {
