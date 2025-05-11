@@ -102,7 +102,6 @@ public class game extends VariableFrameRateGame
 	private TextureImage terrainTx, hills, ovenTx, baconTx, restaurantTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
 	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, thiefTx, oven1tx, waLLTx, speakerTx, carTx, pcTx, pc1Tx;
 
-	private Light light1;
 	private double lastFrameTime, currFrameTime, elapsTime;
 	private int sunsetSkybox; // skyboxes
 	private Sound insideSound, outsideSound, footstepSound;
@@ -233,8 +232,8 @@ public class game extends VariableFrameRateGame
 		Matrix4f playerScale = new Matrix4f().scaling(1.8f);
 
 		player = new GameObject(GameObject.root(), playerS, playerTx);
-		player.setLocalTranslation(new Matrix4f().translation(-25, 1, 0));
-		player.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
+		player.setLocalTranslation(new Matrix4f().translation(-46, 1, -16));
+		player.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(50)));
 		player.setLocalScale(playerScale);
 		player.getRenderStates().setModelOrientationCorrection(
 		(new Matrix4f()).rotationY((float)java.lang.Math.toRadians(90.0f)));
@@ -353,10 +352,64 @@ public class game extends VariableFrameRateGame
 	@Override
 	public void initializeLights()
 	{
-		Light.setGlobalAmbient(0.5f, 0.5f, 0.5f);
-		light1 = new Light();
-		light1.setLocation(new Vector3f(5.0f, 4.0f, 2.0f));
-		engine.getSceneGraph().addLight(light1);
+		Light.setGlobalAmbient(0.1f, 0.06f, 0.05f);
+
+		//ceiling lights, 
+		//ceiling 1 is kitchen light, 
+		//ceiling 2 is dining area light
+		Light ceiling1 = new Light(); //kitchen light
+		ceiling1.setType(Light.LightType.POSITIONAL);
+		ceiling1.setAmbient(0.2f, 0.15f, 0.1f);
+		ceiling1.setDiffuse(4.5f, 3.5f, 3.5f);  
+		ceiling1.setSpecular(0.8f, 0.9f, 0.6f);                 
+		ceiling1.setLocation(new Vector3f(10f, 10.5f, 2f)); 
+		ceiling1.setConstantAttenuation(1.0f);
+		ceiling1.setLinearAttenuation(0.1f);
+		ceiling1.setQuadraticAttenuation(0.05f);
+
+		Light ceiling2 = new Light(); //dining area light
+		ceiling2.setType(Light.LightType.POSITIONAL);
+		ceiling2.setAmbient(0.2f, 0.15f, 0.1f);
+		ceiling2.setDiffuse(3.0f, 2f, 2f); 
+		ceiling2.setSpecular(0.8f, 0.9f, 0.6f); 
+		ceiling2.setLocation(new Vector3f(-10f, 10.5f, 2f));
+		ceiling2.setConstantAttenuation(1.0f);
+		ceiling2.setLinearAttenuation(0.1f);
+		ceiling2.setQuadraticAttenuation(0.05f);
+
+		//outside of restaurant light
+		Light doorLight = new Light();
+		doorLight.setType(Light.LightType.POSITIONAL);
+		doorLight.setLocation(new Vector3f(-22.3f, 8f, 0.4f));
+		doorLight.setAmbient(0.2f, 0.2f, 0.2f);
+		doorLight.setDiffuse(1.0f, 1.0f, 1.0f);
+		doorLight.setSpecular(0.5f, 0.5f, 0.5f);
+		doorLight.setConstantAttenuation(1.0f);
+		doorLight.setLinearAttenuation(0.05f);
+		doorLight.setQuadraticAttenuation(0.01f);
+		engine.getSceneGraph().addLight(doorLight);
+
+		//spotlight loc: -21, height, 22
+		Light spotlight1 = new Light(); //spotlight light for sign
+		spotlight1.setType(Light.LightType.SPOTLIGHT);
+		spotlight1.setAmbient(0.2f, 0.15f, 0.1f);            
+		spotlight1.setDiffuse(2f, 2f, 2f);                    
+		spotlight1.setSpecular(1.5f, 1.5f, 1.5f);                   
+
+		Vector3f lightPos = new Vector3f(-21f, 10f, 22f);
+		spotlight1.setLocation(lightPos);
+		spotlight1.setDirection(new Vector3f(0f, 1f, 0f));
+
+		spotlight1.setCutoffAngle(45.0f);           
+		spotlight1.setOffAxisExponent(1.0f);     
+
+		spotlight1.setConstantAttenuation(4.0f);
+		spotlight1.setLinearAttenuation(0.01f);
+		spotlight1.setQuadraticAttenuation(0.0f); 
+
+		engine.getSceneGraph().addLight(ceiling1);
+		engine.getSceneGraph().addLight(ceiling2);
+		engine.getSceneGraph().addLight(spotlight1);
 	}
 
 	private void setupNetworking() {
@@ -472,9 +525,15 @@ public class game extends VariableFrameRateGame
 		outsideSound.stop();
 		outsideSound.play();
         currentAmbience = Ambience.OUTSIDE;
+<<<<<<< HEAD
 		gameLogic = new GameLogic(player, customer, oven1, speaker, insideSound, inventory, engine, pizzaS, pizzaTx);
 
 
+=======
+		gameLogic = new GameLogic(player, customer, oven1, speaker, insideSound, inventory, engine);
+		Vector3f thiefExit = new Vector3f(thief.getWorldLocation());
+		thiefController = new ThiefBehaviorController(thief, cashRegister, thiefExit, player, cashManager);
+>>>>>>> b08844973f106de65bfbef9ae857116810dfbee2
 		
 	}
 
@@ -518,7 +577,7 @@ public class game extends VariableFrameRateGame
 	@Override
 	public void update() {
 		
-		//System.out.println(player.getWorldLocation().x() + " " + player.getWorldLocation().y() + " " + player.getWorldLocation().z());
+		System.out.println(player.getWorldLocation().x() + " " + player.getWorldLocation().y() + " " + player.getWorldLocation().z());
 		Vector3f loc, fwd, up, right;
 		lastFrameTime = currFrameTime;
 		currFrameTime = System.currentTimeMillis();
@@ -573,32 +632,31 @@ public class game extends VariableFrameRateGame
 		
 		if (gameLogic != null) gameLogic.update((float)elapsTime);
 
-		if (thiefController != null && !thiefController.isDone()) {
-			thiefController.update((float)elapsTime);
-		}
-
 		//logic for thief until we put it in GameLogic
-		if (thiefController != null && !thiefController.isDone()) {
+		// only show thief prompt when NOT ordering
+		if (!orderingActive
+			&& thiefController != null
+			&& !thiefController.isDone()) {
 			thiefController.update((float)elapsTime);
-	
-			// show HUD prompt when the thief is in range
-			float d = player.getWorldLocation()
-							.distance(thief.getWorldLocation());
-			if (d < 5.0f) {
+			float d = player.getWorldLocation().distance(thief.getWorldLocation());
+			if (d < 5f) {
 				engine.getHUDmanager().setHUD1(
 					"Press F to catch thief",
 					new Vector3f(1f, 1f, 1f),
 					900, 700
 				);
-				engine.getHUDmanager().setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
 			} else {
-				// clear the prompt when you walk away
 				engine.getHUDmanager().setHUD1(
 					"",
-					new Vector3f(1f, 1f, 1f),
+					new Vector3f(),
 					0, 0
 				);
 			}
+		}
+
+
+		if (thiefController != null && thiefController.isDone()) {
+			thiefController.update((float)elapsTime);
 		}
 
 		//Hud for Inventory Tracking
@@ -635,6 +693,7 @@ public class game extends VariableFrameRateGame
 				isExitMenuScheduled = false;
 			}
 		}
+		
 		// Money HUD
 		GLCanvas canvas = engine.getRenderSystem().getGLCanvas();
 		int canvasWidth = canvas.getWidth();
@@ -763,6 +822,7 @@ public class game extends VariableFrameRateGame
         return;
     }
 
+		//This is bugged, it causes the hud to disappear
 		// OVEN VIEWPORT TOGGLE (L KEY)
 		if (e.getKeyCode() == KeyEvent.VK_L) {
 			hudViewportVisible = !hudViewportVisible;

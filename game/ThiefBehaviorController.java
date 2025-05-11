@@ -58,7 +58,7 @@ public class ThiefBehaviorController {
             thief,
             exitLocation,
             FLEE_THRESHOLD,
-           2f
+           1.5f
         );
         state = State.FLEEING;
     }

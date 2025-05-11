@@ -14,7 +14,7 @@ public class PlayerController implements KeyListener, MouseMotionListener {
 	private PhysicsObject playerPhys;
 	private AnimatedShape playerS;
 	private Engine engine;
-	private float mouseSensitivity = 0.2f;
+	private float mouseSensitivity = 0.4f;
 	private int lastMouseX = -1;
 	private boolean upPressed, downPressed, leftPressed, rightPressed;
 
