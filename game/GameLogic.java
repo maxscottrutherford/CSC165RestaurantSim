@@ -88,31 +88,6 @@ public class GameLogic {
             musicPromptVisible = false;
         }
     }
-    
-
-    /** when you press F near customer */
-    public void tryTakeOrder() {
-        float d = player.getWorldLocation().distance(customer.getWorldLocation());
-        if (!orderTaken && d < INTERACT_DIST) {
-            orderTaken = true;
-            // clear prompt
-            hud.setHUD1("", new Vector3f(1,1,1), 0, 0);
-
-            // pick random table point
-            float angle = rnd.nextFloat() * (float)Math.PI * 2;
-            float xOff  = (float)Math.cos(angle)*ORDER_RADIUS;
-            float zOff  = (float)Math.sin(angle)*ORDER_RADIUS;
-            Vector3f target = new Vector3f(
-                customer.getWorldLocation().x()+xOff,
-                customer.getWorldLocation().y(),
-                customer.getWorldLocation().z()+zOff
-            );
-
-            moveAction = new MoveToWaypoint(
-                customer, target, 0.5f, CUSTOMER_SPEED
-            );
-        }
-    }
 
     /** called when you press F near the oven */
     public void tryStartCooking() {
