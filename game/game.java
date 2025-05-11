@@ -57,6 +57,8 @@ public class game extends VariableFrameRateGame
 	private long hudMessageStartTime = 0;
 	private final long hudMessageDuration = 3000; // 3 seconds
 	private boolean showTimedHUDMessage = false;
+	private boolean zoomedToPC = false;
+
 
 	
 	
@@ -98,7 +100,7 @@ public class game extends VariableFrameRateGame
 
 	//Gameobject textures
 	private TextureImage terrainTx, hills, ovenTx, baconTx, restaurantTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
-	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, thiefTx, oven1tx, waLLTx, speakerTx, carTx, pcTx;
+	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, thiefTx, oven1tx, waLLTx, speakerTx, carTx, pcTx, pc1Tx;
 
 	private Light light1;
 	private double lastFrameTime, currFrameTime, elapsTime;
@@ -212,6 +214,7 @@ public class game extends VariableFrameRateGame
 		oven1tx = new TextureImage("oven.png");
 		speakerTx = new TextureImage("speaker.png");
 		pcTx = new TextureImage("pc.png");
+		pc1Tx = new TextureImage("pc1.png");
 		//load the textures for the game objects
 	}
 
@@ -469,7 +472,7 @@ public class game extends VariableFrameRateGame
 		outsideSound.stop();
 		outsideSound.play();
         currentAmbience = Ambience.OUTSIDE;
-		gameLogic = new GameLogic(player, customer, oven1, speaker, insideSound, inventory, engine);
+		gameLogic = new GameLogic(player, customer, oven1, speaker, insideSound, inventory, engine, pizzaS, pizzaTx);
 
 
 		
@@ -531,10 +534,13 @@ public class game extends VariableFrameRateGame
 		up = player.getWorldUpVector();
 		right = player.getWorldRightVector();
 
+		if (!zoomedToPC) {
 		cam.setU(right);
 		cam.setV(up);
 		cam.setN(fwd);
 		cam.setLocation(loc.add(up.mul(6f)).add(fwd.mul(-10.0f)));
+	}
+
 
 		footstepSound.setLocation(player.getWorldLocation());
 		processNetworking(elapsTime);
@@ -641,25 +647,30 @@ public class game extends VariableFrameRateGame
 
 	}
 
-
 	private void zoomCamToPC() {
-    Camera cam = engine.getRenderSystem().getViewport("MAIN").getCamera();
+		Camera cam = engine.getRenderSystem().getViewport("MAIN").getCamera();
 
-    savedCamPos = cam.getLocation();
-    savedCamU = cam.getU();
-    savedCamV = cam.getV();
-    savedCamN = cam.getN();
+		savedCamPos = cam.getLocation();
+		savedCamU = cam.getU();
+		savedCamV = cam.getV();
+		savedCamN = cam.getN();
 
-    Vector3f pcLoc = pc.getWorldLocation();
-    Vector3f offset = new Vector3f(0f, 2f, 4f);
-    Vector3f newCamPos = new Vector3f(pcLoc).add(offset);
+		Vector3f pcLoc = pc.getWorldLocation();
+		Vector3f offset = new Vector3f(3.2f, 1.8f, 1.4f); 
+		Vector3f newCamPos = new Vector3f(pcLoc).add(offset);
 
-    cam.setLocation(newCamPos);
-    cam.lookAt(pcLoc);
+		cam.setLocation(newCamPos);
+		cam.lookAt(pcLoc);
+
+		zoomedToPC = true;
+		pc.setTextureImage(pc1Tx);
 }
+
+
 
 	private void exitOrderMode() {
 		orderingActive = false;
+		zoomedToPC = false; 
 
 		engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
 		engine.getHUDmanager().setHUD2("", new Vector3f(), 0, 0);
@@ -670,7 +681,10 @@ public class game extends VariableFrameRateGame
 		cam.setU(savedCamU);
 		cam.setV(savedCamV);
 		cam.setN(savedCamN);
-	}
+
+		pc.setTextureImage(pcTx);
+}
+
 
 	private void showOrderMenu() {
 		orderingActive = true;

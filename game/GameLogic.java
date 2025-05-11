@@ -2,12 +2,16 @@ package game;
 
 import java.util.List;
 import java.util.Random;
+
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import com.jogamp.opengl.util.gl2.GLUT;
 
 import tage.Engine;
 import tage.GameObject;
 import tage.HUDmanager;
+import tage.ObjShape;
+import tage.TextureImage;
 import tage.ai.behaviortrees.BTStatus;
 import tage.audio.Sound;
 
@@ -21,6 +25,10 @@ public class GameLogic {
     private boolean isMusicPlaying = false;
     private boolean musicPromptVisible = false;
     private InventoryManager inventory;
+    private ObjShape pizzaS;
+    private TextureImage pizzaTx;
+    private Engine engine;
+
 
     private GameObject player, customer, oven1;
     private HUDmanager  hud;
@@ -34,14 +42,20 @@ public class GameLogic {
     private MoveToWaypoint moveAction       = null;
     private Random      rnd                 = new Random();
 
-    public GameLogic(GameObject player, GameObject customer, GameObject oven1, GameObject speaker, Sound insideSound, InventoryManager inventory, Engine engine) {
-        this.player   = player;
+    public GameLogic(GameObject player, GameObject customer, GameObject oven1,
+                 GameObject speaker, Sound insideSound, InventoryManager inventory,
+                 Engine engine, ObjShape pizzaS, TextureImage pizzaTx) {
+        this.player = player;
         this.customer = customer;
-        this.oven1    = oven1;
+        this.oven1 = oven1;
         this.speaker = speaker;
         this.insideSound = insideSound;
         this.inventory = inventory;
-        this.hud      = engine.getHUDmanager();
+        this.hud = engine.getHUDmanager();
+        this.pizzaS = pizzaS;
+        this.pizzaTx = pizzaTx;
+        this.engine = engine;
+
     }
     public void tryToggleMusic() {
         float d = player.getWorldLocation().distance(speaker.getWorldLocation());
@@ -175,15 +189,21 @@ public class GameLogic {
 
         if (pizzaStarted && !pizzaReady) {
             long elapsed = System.currentTimeMillis() - cookingStart;
-            if (elapsed >= 5_000) {
-                hud.setHUD5("Pizza is Ready!", new Vector3f(0,1,0), 900, 700);
-                hud.setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
-                pizzaReady = true;
-        
-                // Reset state so prompt can appear again
-                pizzaStarted = false;
-                pizzaPrompt = false;
-            }
+             if (elapsed >= 5_000) {
+        // existing HUD updates...
+        pizzaReady = true;
+        pizzaStarted = false;
+        pizzaPrompt = false;
+
+        // 🎯 Create pizza GameObject and attach to player hand
+        GameObject pizzaInHand = new GameObject(player, pizzaS, pizzaTx);
+        pizzaInHand.setLocalTranslation(new Matrix4f().translation(0.5f, 3.5f, 0.8f)); // offset in hand
+        pizzaInHand.setLocalScale(new Matrix4f().scaling(0.8f)); 
+        pizzaInHand.propagateTranslation(true);
+        pizzaInHand.propagateRotation(true);
+        pizzaInHand.applyParentRotationToPosition(true);
+
+    }
         }
 
         if (pizzaReady && System.currentTimeMillis() - pizzaReadyTime > 3000) {
