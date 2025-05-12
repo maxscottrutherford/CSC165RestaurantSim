@@ -51,7 +51,7 @@ public class game extends VariableFrameRateGame
 	private GhostManager ghostManager;
 	private ProtocolClient protClient;
 	private boolean isClientConnected = false;
-	private String serverAddress = "127.0.0.1";
+	private String serverAddress = loadServerIP();
 	private int serverPort = 6000;
 	private boolean upPressed, downPressed, leftPressed, rightPressed;
 	private float   stepTimer      = 0f;
@@ -67,8 +67,16 @@ public class game extends VariableFrameRateGame
 	private boolean zoomedToPC = false;
 
 
-	
-	
+	private String loadServerIP() {
+		try {
+			java.util.Scanner sc = new java.util.Scanner(new java.io.File("ipconfig.txt"));
+			if (sc.hasNextLine())
+				return sc.nextLine().trim();
+		} catch (Exception e) {
+			System.out.println("Could not read IP from file, using default 127.0.0.1");
+		}
+		return "127.0.0.1";
+	}
 
 
 	public GhostManager getGhostManager() {
