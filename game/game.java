@@ -259,12 +259,12 @@ public class game extends VariableFrameRateGame
 		(new Matrix4f()).rotationX((float)java.lang.Math.toRadians(90.0f)));
 
 		customer = new GameObject(GameObject.root(), customerS, customerTx);
-		customer.setLocalTranslation(new Matrix4f().translation(-50, 0, 0));
+		customer.setLocalTranslation(new Matrix4f().translation(-60, 0, 0));
 		customer.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 		customer.setLocalScale(playerScale);
 
 		thief = new GameObject(GameObject.root(), customerS, customerTx);
-		thief.setLocalTranslation(new Matrix4f().translation(-80, 0, 0));
+		thief.setLocalTranslation(new Matrix4f().translation(-100, 0, 0));
 		thief.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 		thief.setLocalScale(playerScale);
 
@@ -663,7 +663,7 @@ public class game extends VariableFrameRateGame
 		cam.setV(up);
 		cam.setN(fwd);
 		cam.setLocation(loc.add(up.mul(6f)).add(fwd.mul(-10.0f)));
-	}
+		}
 
 		
 		footstepSound.setLocation(player.getWorldLocation());
@@ -697,9 +697,7 @@ public class game extends VariableFrameRateGame
 		
 		if (gameLogic != null) gameLogic.update((float)elapsTime);
 
-		if (customerController != null && !customerController.isDone()) {
-			customerController.update((float)elapsTime);
-		}
+		customerController.update((float)elapsTime);
 
 		if (currentOrder != null) {
 			if (System.currentTimeMillis() - currentOrderStart > ORDER_DISPLAY_MS) {
