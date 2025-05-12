@@ -167,9 +167,8 @@ public class GameLogic {
             text = "Press F to serve pizza";
             if (pizzaInHand != null) {
             engine.getSceneGraph().removeGameObject(pizzaInHand);
-            pizzaInHand = null;
-            
-}
+            pizzaInHand = null;           
+            }
         }
 
         // pick color/coords

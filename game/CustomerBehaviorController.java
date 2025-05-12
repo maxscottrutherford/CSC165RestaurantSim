@@ -12,7 +12,8 @@ import tage.ai.behaviortrees.BTStatus;
  * 4) WAIT_AT_TABLE → waits a fixed duration
  * 5) RETURN_TO_COUNTER → walks back to counter
  * 6) WAIT_FOR_SERVE → idle until player serves
- * 7) DONE → cycle complete
+ * 7) LEAVING -> walks out of restaurant
+ * 8) WAIT_BEFORE_LOOP
  */
 public class CustomerBehaviorController {
     private enum State {
@@ -22,13 +23,15 @@ public class CustomerBehaviorController {
         WAIT_AT_TABLE,
         RETURN_TO_COUNTER,
         WAIT_FOR_SERVE,
-        DONE
+        LEAVING,
+        WAIT_BEFORE_LOOP
     }
 
     private static final float ENTRY_THRESHOLD = 1f;
     private static final float INTERACT_DIST   = 5f;
-    private static final float WALK_SPEED      = 2f;
-    private static final long  TABLE_WAIT_MS   = 5000L;
+    private static final float WALK_SPEED      = 1.5f;
+    private static final long  TABLE_WAIT_MS   = 8000L;
+    private static final long LOOP_DELAY_MS = 10000L;
 
     private final GameObject customer;
     private final GameObject counterObj;
@@ -88,6 +91,20 @@ public class CustomerBehaviorController {
         state = State.RETURN_TO_COUNTER;
     }
 
+    private void leaveRestaurant() {
+        mover = new MoveToWaypoint(customer,
+                new Vector3f(-70, 0, 0),
+                ENTRY_THRESHOLD,
+                WALK_SPEED
+        );
+        state = State.LEAVING;
+    }
+
+    private void waitBeforeLoop() {
+        timerStart = System.currentTimeMillis();
+        state = State.WAIT_BEFORE_LOOP;
+    }
+
     /**
      * Called once per frame from game.update(elapsedTime).
      */
@@ -125,8 +142,18 @@ public class CustomerBehaviorController {
                 // idle until tryServeOrder()
                 break;
 
-            case DONE:
-                // cycle finished
+            case LEAVING:
+                if (mover.update(dt) == BTStatus.BH_SUCCESS) {
+                    waitBeforeLoop();
+                }
+                break;
+            
+            case WAIT_BEFORE_LOOP:
+                if (System.currentTimeMillis() - timerStart >= LOOP_DELAY_MS) {
+                    orderTaken = false;
+                    served     = false;
+                    enterCounter();
+                }
                 break;
         }
     }
@@ -149,11 +176,10 @@ public class CustomerBehaviorController {
      */
     public void tryServeOrder() {
         if (state != State.WAIT_FOR_SERVE || served) return;
-        float d = customer.getWorldLocation()
-                          .distance(player.getWorldLocation());
+        float d = customer.getWorldLocation().distance(player.getWorldLocation());
         if (d < INTERACT_DIST) {
             served = true;
-            state  = State.DONE;
+            leaveRestaurant();
         }
     }
 
@@ -166,6 +192,6 @@ public class CustomerBehaviorController {
     }
 
     public boolean isDone() {
-        return state == State.DONE;
+        return state == State.LEAVING;
     }
 }
