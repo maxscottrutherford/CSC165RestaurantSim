@@ -49,7 +49,7 @@ public class ThiefBehaviorController {
     private void startEntering() {
         mover = new MoveToWaypoint(
             thief,
-            registerObj.getWorldLocation(),
+            registerObj.getWorldLocation().add(-1.5f, -2.3f, 0),
             ENTRY_THRESHOLD,
             1.5f
         );

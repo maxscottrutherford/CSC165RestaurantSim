@@ -58,7 +58,7 @@ public class CustomerBehaviorController {
     private void enterCounter() {
         mover = new MoveToWaypoint(
             customer,
-            counterObj.getWorldLocation(),
+            counterObj.getWorldLocation().add(-1.5f, -2.3f, 0),
             ENTRY_THRESHOLD,
             WALK_SPEED
         );
@@ -66,7 +66,7 @@ public class CustomerBehaviorController {
     }
 
     private void moveToTable() {
-        Vector3f target = new Vector3f(chairObj.getWorldLocation());
+        Vector3f target = new Vector3f(chairObj.getWorldLocation().add(0,-1.5f,0));
         mover = new MoveToWaypoint(
             customer,
             target,
@@ -84,7 +84,7 @@ public class CustomerBehaviorController {
     private void returnToCounter() {
         mover = new MoveToWaypoint(
             customer,
-            counterObj.getWorldLocation(),
+            counterObj.getWorldLocation().add(-1.5f, -2.3f, 0),
             ENTRY_THRESHOLD,
             WALK_SPEED
         );
