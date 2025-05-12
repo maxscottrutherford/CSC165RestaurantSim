@@ -73,9 +73,10 @@ public class PlayerController implements KeyListener, MouseMotionListener {
 
 			case KeyEvent.VK_W -> {upPressed = true; 
 			playerS.playAnimation("WALK", 1f,
-			AnimatedShape.EndType.LOOP, 0);} 
+			AnimatedShape.EndType.PINGPONG, -1);} 
 
-			case KeyEvent.VK_S -> {downPressed = true; playerS.stopAnimation();
+			case KeyEvent.VK_S -> {downPressed = true; playerS.playAnimation("WALK", 0.5f,
+			AnimatedShape.EndType.PAUSE, 100);
 				break;}
 			case KeyEvent.VK_A -> leftPressed = true;
 			case KeyEvent.VK_D -> rightPressed = true;

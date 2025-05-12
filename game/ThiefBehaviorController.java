@@ -51,7 +51,7 @@ public class ThiefBehaviorController {
             thief,
             registerObj.getWorldLocation().add(-1.5f, -2.3f, 0),
             ENTRY_THRESHOLD,
-            1.5f
+            0.5f
         );
         state = State.ENTERING;
     }
@@ -66,7 +66,7 @@ public class ThiefBehaviorController {
             thief,
             exitLocation,
             FLEE_THRESHOLD,
-            2f
+            1f
         );
         state = State.FLEEING;
     }

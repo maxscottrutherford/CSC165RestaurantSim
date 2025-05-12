@@ -116,7 +116,7 @@ public class game extends VariableFrameRateGame
 
 	//Gameobject textures
 	private TextureImage terrainTx, hills, ovenTx, baconTx, restaurantTx, bellPepperTx, cashRegisterTx, ceilingTx, chairTx, counterTx, customerTx, cuttingBoardTx, floorTx, knifeTx, mushroomTx, pantryShelfTx, pepperoniTx,
-	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, thiefTx, oven1tx, waLLTx, speakerTx, carTx, pcTx, pc1Tx, lightTx;
+	pizzaTx, playerTx, posterTx, posterWideTx, saucecanTx, signBoardTx, sodaCupTx, sodaMachineTx, tablev, thiefTx, oven1tx, waLLTx, speakerTx, carTx, pcTx, pc1Tx, lightTx, player1Tx, theifTx;
 
 	private double lastFrameTime, currFrameTime, elapsTime;
 	private int sunsetSkybox; // skyboxes
@@ -141,6 +141,7 @@ public class game extends VariableFrameRateGame
 	private long exitMenuStartTime = 0;
 	private boolean isExitMenuScheduled = false;
 	private boolean mainMenuActive = true;
+	private boolean cDress = false;
 	Light pclight = new Light(); 
 
 	
@@ -234,6 +235,8 @@ public class game extends VariableFrameRateGame
 		pcTx = new TextureImage("pc.png");
 		pc1Tx = new TextureImage("pc1.png");
 		lightTx = new TextureImage("light.png");
+		player1Tx = new TextureImage("player1.png");
+		theifTx = new TextureImage("thief.png");
 		//load the textures for the game objects
 	}
 
@@ -271,7 +274,7 @@ public class game extends VariableFrameRateGame
 		customer.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 		customer.setLocalScale(playerScale);
 
-		thief = new GameObject(GameObject.root(), customerS, customerTx);
+		thief = new GameObject(GameObject.root(), customerS, theifTx);
 		thief.setLocalTranslation(new Matrix4f().translation(-100, 0, 0));
 		thief.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(90)));
 		thief.setLocalScale(playerScale);
@@ -327,6 +330,20 @@ public class game extends VariableFrameRateGame
 		cashRegister1.setLocalTranslation(new Matrix4f().translation(1, 2.3f, 6.5f));
 		cashRegister1.setLocalScale(new Matrix4f().scaling(2.5f));
 		cashRegister1.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+
+		sodaMachine = new GameObject(GameObject.root(), sodaMachineS, sodaMachineTx);
+		sodaMachine.setLocalTranslation(new Matrix4f().translation(1, 2f, -13f));
+		sodaMachine.setLocalScale(new Matrix4f().scaling(3.5f));
+		cashRegister1.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+
+		sodaCup = new GameObject(GameObject.root(), sodaCupS, sodaCupTx);
+		sodaCup.setLocalTranslation(new Matrix4f().translation(1, 2.3f, -13f));
+		sodaCup.setLocalScale(new Matrix4f().scaling(1f));
+		sodaCup.setLocalRotation(new Matrix4f().rotationY((float) Math.toRadians(-90)));
+
+		cuttingBoard = new GameObject(GameObject.root(), cuttingBoardS, cuttingBoardTx);
+		cuttingBoard.setLocalTranslation(new Matrix4f().translation(21.5f, 2.6f, -2f));
+		cuttingBoard.setLocalScale(new Matrix4f().scaling(5f));
 
 		oven = new GameObject(GameObject.root(), ovenS, ovenTx);
 		oven.setLocalTranslation(new Matrix4f().translation(0f, 0f, -10000f));
@@ -478,6 +495,10 @@ public class game extends VariableFrameRateGame
 		if (protClient != null) {
 			protClient.processPackets();
 		}
+	}
+
+	private void changeDress(){
+			player.setTextureImage(player1Tx);
 	}
 
 	
@@ -775,6 +796,17 @@ public class game extends VariableFrameRateGame
 				isExitMenuScheduled = false;
 			}
 		}
+		
+		Vector3f pantryShelfPos = pantryShelf1.getWorldLocation();
+		float distToPantry = playerPos.distance(pantryShelfPos);
+
+		if (distToPantry < 5.0f) {
+			engine.getHUDmanager().setHUD1("Switched to work clothes", new Vector3f(1,1,1), 800, 700);
+			changeDress();
+		} else {
+			engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
+		}
+
 		
 		// Money HUD
 		GLCanvas canvas = engine.getRenderSystem().getGLCanvas();
