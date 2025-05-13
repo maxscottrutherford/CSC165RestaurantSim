@@ -784,9 +784,9 @@ public class game extends VariableFrameRateGame
 		nearPC = (distToPC < 5.0f);
 
 		if (!orderingActive && nearPC) {
-			engine.getHUDmanager().setHUD1("Press O to order ingredients", new Vector3f(1,1,1), 800, 700);
+			engine.getHUDmanager().setHUD9("Press O to order ingredients", new Vector3f(1,1,1), 800, 700);
 		} else if (!orderingActive) {
-			engine.getHUDmanager().setHUD1("", new Vector3f(), 0, 0);
+			engine.getHUDmanager().setHUD9("", new Vector3f(), 0, 0);
 		}
 		// Exit order mode after delay
 		if (isExitMenuScheduled) {
@@ -875,7 +875,7 @@ public class game extends VariableFrameRateGame
 	private void showOrderMenu() {
 		orderingActive = true;
 
-		String msg = "Select an ingredient to buy: 1. Mushroom = $5   2. Pepperoni = $4   3. Cheese = $3   4. Sauce = $2";
+		String msg = "Select an ingredient to buy: 1. Mushroom = $5   2. Pepperoni = $4   3. Cheese = $3   4. Sauce = $2. Backspace to exit";
 
 		// Get canvas dimensions
 		int canvasWidth = engine.getRenderSystem().getGLCanvas().getWidth();
@@ -889,8 +889,8 @@ public class game extends VariableFrameRateGame
 		int y = canvasHeight - 80;  // Adjust as needed for spacing
 
 		// Show HUD1
-		engine.getHUDmanager().setHUD1(msg, new Vector3f(1f, 1f, 0.6f), x, y);
-		engine.getHUDmanager().setHUD1font(GLUT.BITMAP_TIMES_ROMAN_24);
+		engine.getHUDmanager().setHUD9(msg, new Vector3f(1f, 1f, 0.6f), x, y);
+		engine.getHUDmanager().setHUD9font(GLUT.BITMAP_TIMES_ROMAN_24);
 	}
 	private void buyItem(int index) {
 		int cost = menuPrices[index];
@@ -920,8 +920,8 @@ public class game extends VariableFrameRateGame
 		int x = (canvasWidth / 2) - (estimatedTextWidth / 2);
 		int y = canvasHeight - 110; // ~30 pixels below HUD1
 
-		engine.getHUDmanager().setHUD2(msg, color, x, y);
-		engine.getHUDmanager().setHUD2font(GLUT.BITMAP_TIMES_ROMAN_24);
+		engine.getHUDmanager().setHUD9(msg, color, x, y);
+		engine.getHUDmanager().setHUD9font(GLUT.BITMAP_TIMES_ROMAN_24);
 
 		// Start delayed exit
 		exitMenuStartTime = System.currentTimeMillis();
